@@ -1,0 +1,6 @@
+@MreHunter.Api_HostAddress = http://localhost:5119
+
+GET {{MreHunter.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
