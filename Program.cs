@@ -136,6 +136,7 @@ builder.Services.AddTransient<EmailService>();
 builder.Services.AddScoped<ProductsService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<ProductsPetsService>();
+builder.Services.AddScoped<ProductsDashcamService>();
 builder.Services.AddScoped<ProductsPortableService>();
 builder.Services.AddHttpContextAccessor();
 
