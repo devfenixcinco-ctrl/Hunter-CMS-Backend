@@ -6,7 +6,8 @@ using MreHunter.Api.Services;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/pets-products")]
+    [Tags("Producto Pets")]
     public class ProductsPetsController : ControllerBase
     {
         private readonly ProductsPetsService _productsPetsService;

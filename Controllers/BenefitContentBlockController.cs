@@ -7,7 +7,8 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/conventional-info-section")]
+    [Tags("Producto Convencional ")]
     public class BenefitContentBlockController : ControllerBase
     {
         private readonly Db _db;
@@ -21,10 +22,8 @@ namespace MreHunter.Api.Controllers
         {
             return string.IsNullOrWhiteSpace(req.Title) ||
                    string.IsNullOrWhiteSpace(req.Description) ||
-                   string.IsNullOrWhiteSpace(req.MediaUrl) ||
-                   string.IsNullOrWhiteSpace(req.MediaType) ||
-                   string.IsNullOrWhiteSpace(req.TextPosition) ||
-                   req.DisplayOrder <= 0;
+                   string.IsNullOrWhiteSpace(req.MediaUrl);
+        
         }
 
         [HttpGet]
@@ -50,10 +49,6 @@ namespace MreHunter.Api.Controllers
                     Title = reader.GetString("title"),
                     Description = reader["description"]?.ToString(),
                     MediaUrl = reader["media_url"]?.ToString(),
-                    MediaType = reader.GetString("media_type"),
-                    TextPosition = reader.GetString("text_position"),
-                    DisplayOrder = reader.GetInt32("display_order"),
-                    IsActive = reader.GetBoolean("is_active"),
                     CreatedAt = reader.GetDateTime("created_at")
                 });
             }
@@ -85,10 +80,6 @@ namespace MreHunter.Api.Controllers
                 Title = reader.GetString("title"),
                 Description = reader["description"]?.ToString(),
                 MediaUrl = reader["media_url"]?.ToString(),
-                MediaType = reader.GetString("media_type"),
-                TextPosition = reader.GetString("text_position"),
-                DisplayOrder = reader.GetInt32("display_order"),
-                IsActive = reader.GetBoolean("is_active"),
                 CreatedAt = reader.GetDateTime("created_at")
             };
 
@@ -126,10 +117,7 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@mediaUrl", req.MediaUrl?.Trim());
-            cmd.Parameters.AddWithValue("@mediaType", req.MediaType?.Trim());
-            cmd.Parameters.AddWithValue("@textPosition", req.TextPosition?.Trim());
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
+    
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -175,10 +163,7 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@mediaUrl", req.MediaUrl?.Trim());
-            cmd.Parameters.AddWithValue("@mediaType", req.MediaType?.Trim());
-            cmd.Parameters.AddWithValue("@textPosition", req.TextPosition?.Trim());
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
+            
             cmd.Parameters.AddWithValue("@id", id);
 
             var rows = await cmd.ExecuteNonQueryAsync();

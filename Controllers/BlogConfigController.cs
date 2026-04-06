@@ -7,7 +7,8 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/blogconfig")]
+    [Route("api/blog-config")]
+    [Tags("blog")]
     public class BlogConfigController : ControllerBase
     {
         private readonly Db _db;

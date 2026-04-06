@@ -12,12 +12,6 @@ namespace MreHunter.Api.Models
         [MaxLength(1000)]
         public string? Description { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string? BackgroundColor { get; set; }
-
-        [Required]
-        [MaxLength(50)]
-        public string? TextColor { get; set; }
+       
     }
 }

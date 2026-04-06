@@ -7,7 +7,8 @@ using MreHunter.Api.Models;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/contact-form")]
+    [Tags("Formulario Contacto (Datos)")]
     public class ContactMessageController : ControllerBase
     {
         private readonly Db _db;

@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/home")]
     public class HomeController : ControllerBase
     {
         private readonly Db _db;
@@ -25,8 +25,7 @@ namespace MreHunter.Api.Controllers
         private static int? ReadNullableInt(MySqlDataReader reader, string col)
             => reader[col] == DBNull.Value ? (int?)null : Convert.ToInt32(reader[col]);
 
-        // GET /api/home
-       // GET /api/home
+      
     [HttpGet]
     public async Task<IActionResult> Get()
     {
@@ -40,7 +39,7 @@ namespace MreHunter.Api.Controllers
         if (!await reader.ReadAsync())
             return NotFound(new { message = "No hay configuración de Home aún" });
 
-        // 🔥 Leer countries como JSON string
+        //  Leer countries como JSON string
         var countriesJson = ReadNullableString(reader, "countries");
 
         List<string>? countries = null;
@@ -95,7 +94,7 @@ namespace MreHunter.Api.Controllers
 
             return Ok(home);
         }   
-        // POST /api/home (Save: crea si no existe, actualiza si existe)
+        //Upsert
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] HomeUpdateRequest req)
         {
@@ -227,7 +226,7 @@ namespace MreHunter.Api.Controllers
             return Ok(new { message = "Home creado (POST)", created = true, id = newId });
         }
 
-        // PUT /api/home (actualiza id=1)
+        //  (actualiza id=1)
         [HttpPut]
     public async Task<IActionResult> Update([FromBody] HomeUpdateRequest req)
     {

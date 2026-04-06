@@ -7,7 +7,8 @@ using MreHunter.Api.Models;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/contact-header")]
+    [Tags("Formulario Contacto Header")]
     public class ContactInfoController : ControllerBase
     {
         private readonly Db _db;
@@ -47,6 +48,7 @@ namespace MreHunter.Api.Controllers
         }
 
         [Authorize]
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ContactInfoRequest request)
         {
@@ -59,15 +61,44 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
+            long? existingId = null;
 
-            using (var check = new MySqlCommand("SELECT COUNT(*) FROM contact_info;", conn))
+            using (var find = new MySqlCommand("SELECT id FROM contact_info ORDER BY id DESC LIMIT 1;", conn))
             {
-                var count = Convert.ToInt64(await check.ExecuteScalarAsync());
-                if (count > 0)
-                    return Conflict(new { message = "Ya existe información de contacto. Usa PUT para actualizar." });
+                var obj = await find.ExecuteScalarAsync();
+                if (obj != null)
+                    existingId = Convert.ToInt64(obj);
             }
 
-            using var cmd = new MySqlCommand(@"
+            if (existingId.HasValue)
+            {
+                using var updateCmd = new MySqlCommand(@"
+                    UPDATE contact_info
+                    SET
+                        phone = @phone,
+                        whatsapp_text = @whatsapp_text,
+                        whatsapp_link = @whatsapp_link,
+                        email = @email,
+                        updated_at = NOW()
+                    WHERE id = @id;", conn);
+
+                updateCmd.Parameters.AddWithValue("@phone", (object?)request.Phone ?? DBNull.Value);
+                updateCmd.Parameters.AddWithValue("@whatsapp_text", (object?)request.WhatsappText ?? DBNull.Value);
+                updateCmd.Parameters.AddWithValue("@whatsapp_link", (object?)request.WhatsappLink ?? DBNull.Value);
+                updateCmd.Parameters.AddWithValue("@email", (object?)request.Email ?? DBNull.Value);
+                updateCmd.Parameters.AddWithValue("@id", existingId.Value);
+
+                await updateCmd.ExecuteNonQueryAsync();
+
+                return Ok(new
+                {
+                    message = "Información de contacto actualizada.",
+                    id = existingId.Value,
+                    created = false
+                });
+            }
+
+            using var insertCmd = new MySqlCommand(@"
                 INSERT INTO contact_info
                 (
                     phone,
@@ -84,19 +115,20 @@ namespace MreHunter.Api.Controllers
                 );
                 SELECT LAST_INSERT_ID();", conn);
 
-            cmd.Parameters.AddWithValue("@phone", (object?)request.Phone ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@whatsapp_text", (object?)request.WhatsappText ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@whatsapp_link", (object?)request.WhatsappLink ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@email", (object?)request.Email ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@phone", (object?)request.Phone ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@whatsapp_text", (object?)request.WhatsappText ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@whatsapp_link", (object?)request.WhatsappLink ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@email", (object?)request.Email ?? DBNull.Value);
 
-            var newId = Convert.ToInt64(await cmd.ExecuteScalarAsync());
+            var newId = Convert.ToInt64(await insertCmd.ExecuteScalarAsync());
 
             return Ok(new
             {
                 message = "Información de contacto creada.",
-                id = newId
+                id = newId,
+                created = true
             });
-        }
+}
 
         [Authorize]
         [HttpPut]

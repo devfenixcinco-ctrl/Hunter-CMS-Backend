@@ -6,8 +6,9 @@ using MreHunter.Api.Services;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class CompanyController : ControllerBase
+    [Route("api/mission-accomplished")]
+    [Tags("Misión Cumplida")]
+        public class CompanyController : ControllerBase
     {
         private readonly CompanyService _companyService;
 

@@ -9,7 +9,10 @@ using System.Text.Json;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/about-us")]
+    [Tags("Quienes somos")]
+
+    
     public class AboutUsController : ControllerBase
     {
         private readonly Db _db;

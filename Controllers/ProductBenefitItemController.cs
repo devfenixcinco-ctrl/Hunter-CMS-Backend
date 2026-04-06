@@ -6,7 +6,8 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/conventional-benefits")]
+    [Tags("Producto Convencional (Beneficios)")]
     public class ProductBenefitItemController : ControllerBase
     {
         private readonly Db _db;
@@ -22,9 +23,9 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"SELECT id, title, icon, display_order, is_active, created_at
+            var sql = @"SELECT id, title, icon, created_at
                         FROM benefit_items
-                        ORDER BY display_order ASC, id ASC;";
+                        ORDER BY id ASC;";
 
             using var cmd = new MySqlCommand(sql, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -38,8 +39,6 @@ namespace MreHunter.Api.Controllers
                     Id = reader.GetInt32("id"),
                     Title = reader.GetString("title"),
                     Icon = reader["icon"]?.ToString(),
-                    DisplayOrder = reader.GetInt32("display_order"),
-                    IsActive = reader.GetBoolean("is_active"),
                     CreatedAt = reader.GetDateTime("created_at")
                 });
             }
@@ -53,7 +52,7 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"SELECT id, title, icon, display_order, is_active, created_at
+            var sql = @"SELECT id, title, icon, created_at
                         FROM benefit_items
                         WHERE id = @id;";
 
@@ -70,8 +69,6 @@ namespace MreHunter.Api.Controllers
                 Id = reader.GetInt32("id"),
                 Title = reader.GetString("title"),
                 Icon = reader["icon"]?.ToString(),
-                DisplayOrder = reader.GetInt32("display_order"),
-                IsActive = reader.GetBoolean("is_active"),
                 CreatedAt = reader.GetDateTime("created_at")
             };
 
@@ -81,18 +78,19 @@ namespace MreHunter.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProductBenefitItemCreateRequest req)
         {
+            if (req == null)
+                return BadRequest(new { message = "Body requerido." });
+
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"INSERT INTO benefit_items (title, icon, display_order, is_active)
-                        VALUES (@title, @icon, @displayOrder, @isActive);
+            var sql = @"INSERT INTO benefit_items (title, icon)
+                        VALUES (@title, @icon);
                         SELECT LAST_INSERT_ID();";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@title", req.Title);
             cmd.Parameters.AddWithValue("@icon", (object?)req.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -106,21 +104,20 @@ namespace MreHunter.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] ProductBenefitItemUpdateRequest req)
         {
+            if (req == null)
+                return BadRequest(new { message = "Body requerido." });
+
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
             var sql = @"UPDATE benefit_items
                         SET title = @title,
-                            icon = @icon,
-                            display_order = @displayOrder,
-                            is_active = @isActive
+                            icon = @icon
                         WHERE id = @id;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@title", req.Title);
             cmd.Parameters.AddWithValue("@icon", (object?)req.Icon ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
             cmd.Parameters.AddWithValue("@id", id);
 
             var rows = await cmd.ExecuteNonQueryAsync();

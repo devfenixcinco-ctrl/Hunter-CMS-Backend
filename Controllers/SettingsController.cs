@@ -6,7 +6,8 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/settings")]
+    [Tags("Configuración general -")]
     public class SettingsController : ControllerBase
     {
         private readonly Db _db;
@@ -27,7 +28,6 @@ namespace MreHunter.Api.Controllers
             var data = new GeneralSettings
             {
                 Id = reader.GetInt32("id"),
-                Logo = reader["logo"]?.ToString() ?? string.Empty,
                 PrimaryColor = reader["primary_color"]?.ToString() ?? string.Empty,
                 SecondaryColor = reader["secondary_color"]?.ToString(),
                 TextPrimaryColor = reader["text_primary_color"]?.ToString(),
@@ -40,123 +40,126 @@ namespace MreHunter.Api.Controllers
             return Ok(data);
         }
 
-  [HttpPost("UploadLogo")]
-[Consumes("multipart/form-data")]
-public async Task<IActionResult> UploadLogo(IFormFile logo)
-{
-    if (logo == null || logo.Length == 0)
-        return BadRequest(new { message = "No se recibió ningún archivo." });
-
-    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-    var extension = Path.GetExtension(logo.FileName).ToLowerInvariant();
-
-    if (!allowedExtensions.Contains(extension))
-        return BadRequest(new { message = "Formato no permitido. Solo jpg, jpeg, png y webp." });
-
-    var uploadsFolder = Path.Combine(
-        Directory.GetCurrentDirectory(),
-        "wwwroot",
-        "uploads",
-        "settings"
-    );
-
-    if (!Directory.Exists(uploadsFolder))
-        Directory.CreateDirectory(uploadsFolder);
-
-    var possibleOldFiles = new[]
+    [HttpPost("UploadLogo")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadLogo(IFormFile logo)
     {
-        Path.Combine(uploadsFolder, "logo.jpg"),
-        Path.Combine(uploadsFolder, "logo.jpeg"),
-        Path.Combine(uploadsFolder, "logo.png"),
-        Path.Combine(uploadsFolder, "logo.webp")
-    };
+        if (logo == null || logo.Length == 0)
+            return BadRequest(new { message = "No se recibió ningún archivo." });
 
-    foreach (var oldFile in possibleOldFiles)
-    {
-        if (System.IO.File.Exists(oldFile))
-            System.IO.File.Delete(oldFile);
-    }
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(logo.FileName).ToLowerInvariant();
 
-    var fixedFileName = "logo" + extension;
-    var filePath = Path.Combine(uploadsFolder, fixedFileName);
+        if (!allowedExtensions.Contains(extension))
+            return BadRequest(new { message = "Formato no permitido. Solo jpg, jpeg, png y webp." });
 
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await logo.CopyToAsync(stream);
-    }
-
-    var baseUrl = $"{Request.Scheme}://{Request.Host}";
-    var logoUrl = $"{baseUrl}/uploads/settings/{fixedFileName}";
-
-    using var conn = _db.GetConnection();
-    await conn.OpenAsync();
-
-    using var getIdCmd = new MySqlCommand("SELECT id FROM general_settings LIMIT 1;", conn);
-    var existingIdObj = await getIdCmd.ExecuteScalarAsync();
-
-    if (existingIdObj != null)
-    {
-        int id = Convert.ToInt32(existingIdObj);
-
-        using var updateCmd = new MySqlCommand(
-            "UPDATE general_settings SET logo = @logo WHERE id = @id;",
-            conn
+        var uploadsFolder = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "uploads",
+            "settings"
         );
 
-        updateCmd.Parameters.AddWithValue("@logo", logoUrl);
-        updateCmd.Parameters.AddWithValue("@id", id);
+        if (!Directory.Exists(uploadsFolder))
+            Directory.CreateDirectory(uploadsFolder);
 
-        await updateCmd.ExecuteNonQueryAsync();
+        var possibleOldFiles = new[]
+        {
+            Path.Combine(uploadsFolder, "logo.jpg"),
+            Path.Combine(uploadsFolder, "logo.jpeg"),
+            Path.Combine(uploadsFolder, "logo.png"),
+            Path.Combine(uploadsFolder, "logo.webp")
+        };
+
+        foreach (var oldFile in possibleOldFiles)
+        {
+            if (System.IO.File.Exists(oldFile))
+                System.IO.File.Delete(oldFile);
+        }
+
+        var fixedFileName = "logo" + extension;
+        var filePath = Path.Combine(uploadsFolder, fixedFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await logo.CopyToAsync(stream);
+        }
+
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var logoUrl = $"{baseUrl}/uploads/settings/{fixedFileName}";
+
+        using var conn = _db.GetConnection();
+        await conn.OpenAsync();
+
+        using var getIdCmd = new MySqlCommand("SELECT id FROM general_settings LIMIT 1;", conn);
+        var existingIdObj = await getIdCmd.ExecuteScalarAsync();
+
+        if (existingIdObj != null)
+        {
+            int id = Convert.ToInt32(existingIdObj);
+
+            using var updateCmd = new MySqlCommand(
+                "UPDATE general_settings SET logo = @logo WHERE id = @id;",
+                conn
+            );
+
+            updateCmd.Parameters.AddWithValue("@logo", logoUrl);
+            updateCmd.Parameters.AddWithValue("@id", id);
+
+            await updateCmd.ExecuteNonQueryAsync();
+
+            return Ok(new
+            {
+                message = "Logo actualizado correctamente.",
+                created = false,
+                id,
+                logoUrl
+            });
+        }
+
+        using var insertCmd = new MySqlCommand(@"
+            INSERT INTO general_settings
+            (
+                logo,
+                primary_color,
+                secondary_color,
+                text_primary_color,
+                text_secondary_color,
+                hover_background_color,
+                whatsapp_number
+            )
+            VALUES
+            (
+                @logo,
+                '',
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                ''
+            );
+            SELECT LAST_INSERT_ID();
+        ", conn);
+
+        insertCmd.Parameters.AddWithValue("@logo", logoUrl);
+
+        int newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
         return Ok(new
         {
-            message = "Logo actualizado correctamente.",
-            created = false,
-            id,
+            message = "Logo guardado correctamente.",
+            created = true,
+            id = newId,
             logoUrl
         });
     }
 
-    using var insertCmd = new MySqlCommand(@"
-        INSERT INTO general_settings
-        (
-            logo,
-            primary_color,
-            secondary_color,
-            text_primary_color,
-            text_secondary_color,
-            hover_background_color,
-            whatsapp_number
-        )
-        VALUES
-        (
-            @logo,
-            '',
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            ''
-        );
-        SELECT LAST_INSERT_ID();
-    ", conn);
-
-    insertCmd.Parameters.AddWithValue("@logo", logoUrl);
-
-    int newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
-
-    return Ok(new
-    {
-        message = "Logo guardado correctamente.",
-        created = true,
-        id = newId,
-        logoUrl
-    });
-}
-
-        [HttpPost]
+       [HttpPost]
         public async Task<IActionResult> Save([FromBody] GeneralSettingsUpdateRequest req)
         {
+            if (req == null)
+                return BadRequest(new { message = "Body requerido." });
+
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
@@ -169,7 +172,7 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
 
                 var updateSql = @"
                     UPDATE general_settings
-                    SET logo = @logo,
+                    SET
                         primary_color = @color,
                         secondary_color = @secondaryColor,
                         text_primary_color = @textPrimaryColor,
@@ -179,7 +182,6 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
                     WHERE id = @id;";
 
                 using var cmd = new MySqlCommand(updateSql, conn);
-                cmd.Parameters.AddWithValue("@logo", req.Logo);
                 cmd.Parameters.AddWithValue("@color", req.PrimaryColor);
                 cmd.Parameters.AddWithValue("@secondaryColor", (object?)req.SecondaryColor ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@textPrimaryColor", (object?)req.TextPrimaryColor ?? DBNull.Value);
@@ -201,7 +203,6 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
             var insertSql = @"
                 INSERT INTO general_settings
                 (
-                    logo,
                     primary_color,
                     secondary_color,
                     text_primary_color,
@@ -211,7 +212,6 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
                 )
                 VALUES
                 (
-                    @logo,
                     @color,
                     @secondaryColor,
                     @textPrimaryColor,
@@ -222,7 +222,6 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
                 SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
-            insertCmd.Parameters.AddWithValue("@logo", req.Logo);
             insertCmd.Parameters.AddWithValue("@color", req.PrimaryColor);
             insertCmd.Parameters.AddWithValue("@secondaryColor", (object?)req.SecondaryColor ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@textPrimaryColor", (object?)req.TextPrimaryColor ?? DBNull.Value);
@@ -243,6 +242,9 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] GeneralSettingsUpdateRequest req)
         {
+            if (req == null)
+                return BadRequest(new { message = "Body requerido." });
+
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
@@ -258,7 +260,7 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
 
             var sql = @"
                 UPDATE general_settings
-                SET logo = @logo,
+                SET
                     primary_color = @color,
                     secondary_color = @secondaryColor,
                     text_primary_color = @textPrimaryColor,
@@ -268,7 +270,6 @@ public async Task<IActionResult> UploadLogo(IFormFile logo)
                 WHERE id = @id;";
 
             using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@logo", req.Logo);
             cmd.Parameters.AddWithValue("@color", req.PrimaryColor);
             cmd.Parameters.AddWithValue("@secondaryColor", (object?)req.SecondaryColor ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@textPrimaryColor", (object?)req.TextPrimaryColor ?? DBNull.Value);

@@ -7,7 +7,8 @@ using System.Linq;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/work-with-us")]
+    [Tags("¿Quienes Somos? (Formulario)")]
     public class JobsController : ControllerBase
     {
         private readonly IConfiguration _configuration;

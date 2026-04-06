@@ -8,7 +8,7 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/productsdashcam")]
+    [Route("api/products-dashcam")]
     public class ProductsDashcamController : ControllerBase
     {
         private readonly Db _db;

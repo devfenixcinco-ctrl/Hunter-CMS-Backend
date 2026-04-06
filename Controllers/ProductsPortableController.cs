@@ -6,7 +6,8 @@ using MreHunter.Api.Services;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/portable-products")]
+    [Tags("Producto Portable ")]
     public class ProductsPortableController : ControllerBase
     {
         private readonly ProductsPortableService _productsPortableService;

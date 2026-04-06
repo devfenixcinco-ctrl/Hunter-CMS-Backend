@@ -13,7 +13,8 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
+    [Tags("Autenticación")]
     public class AuthController : ControllerBase
     {
         private readonly Db _db;

@@ -7,14 +7,18 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/footer")]
     public class FooterController : ControllerBase
     {
         private readonly Db _db;
-        public FooterController(Db db) => _db = db;
 
-        private static string? ReadNullableString(MySqlDataReader r, string c)
-            => r[c] == DBNull.Value ? null : r[c].ToString();
+        public FooterController(Db db)
+        {
+            _db = db;
+        }
+
+        private static string? ReadNullableString(MySqlDataReader reader, string column)
+            => reader[column] == DBNull.Value ? null : reader[column].ToString();
 
         private static bool IsInvalidString(string? value)
             => string.IsNullOrWhiteSpace(value);
@@ -35,7 +39,8 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new MySqlCommand("SELECT * FROM footer ORDER BY id DESC LIMIT 1;", conn);
+            const string sql = "SELECT * FROM footer ORDER BY id DESC LIMIT 1;";
+            using var cmd = new MySqlCommand(sql, conn);
             using var reader = await cmd.ExecuteReaderAsync();
 
             if (!await reader.ReadAsync())
@@ -58,18 +63,21 @@ namespace MreHunter.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] FooterUpdateRequest req)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             if (req == null)
                 return BadRequest(new { message = "El body es requerido" });
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             if (IsInvalidString(req.FooterText) ||
                 IsInvalidString(req.Address) ||
                 IsInvalidString(req.Email) ||
                 IsInvalidString(req.SocialUsername))
             {
-                return BadRequest(new { message = "Todos los campos son obligatorios y no pueden estar vacíos" });
+                return BadRequest(new
+                {
+                    message = "Todos los campos son obligatorios y no pueden estar vacíos"
+                });
             }
 
             using var conn = _db.GetConnection();
@@ -79,12 +87,12 @@ namespace MreHunter.Api.Controllers
 
             if (existingId.HasValue)
             {
-                var updateSql = @"UPDATE footer
-                                  SET footer_text=@text,
-                                      address=@addr,
-                                      email=@mail,
-                                      social_username=@user
-                                  WHERE id=@id;";
+                const string updateSql = @"UPDATE footer
+                                           SET footer_text=@text,
+                                               address=@addr,
+                                               email=@mail,
+                                               social_username=@user
+                                           WHERE id=@id;";
 
                 using var cmd = new MySqlCommand(updateSql, conn);
                 cmd.Parameters.AddWithValue("@text", NormalizeValue(req.FooterText));
@@ -93,7 +101,10 @@ namespace MreHunter.Api.Controllers
                 cmd.Parameters.AddWithValue("@user", NormalizeValue(req.SocialUsername));
                 cmd.Parameters.AddWithValue("@id", existingId.Value);
 
-                await cmd.ExecuteNonQueryAsync();
+                var rows = await cmd.ExecuteNonQueryAsync();
+
+                if (rows == 0)
+                    return NotFound(new { message = "No se pudo actualizar el footer" });
 
                 return Ok(new
                 {
@@ -103,9 +114,9 @@ namespace MreHunter.Api.Controllers
                 });
             }
 
-            var insertSql = @"INSERT INTO footer (footer_text, address, email, social_username)
-                              VALUES (@text, @addr, @mail, @user);
-                              SELECT LAST_INSERT_ID();";
+            const string insertSql = @"INSERT INTO footer (footer_text, address, email, social_username)
+                                       VALUES (@text, @addr, @mail, @user);
+                                       SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
             insertCmd.Parameters.AddWithValue("@text", NormalizeValue(req.FooterText));
@@ -127,18 +138,21 @@ namespace MreHunter.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] FooterUpdateRequest req)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             if (req == null)
                 return BadRequest(new { message = "El body es requerido" });
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             if (IsInvalidString(req.FooterText) ||
                 IsInvalidString(req.Address) ||
                 IsInvalidString(req.Email) ||
                 IsInvalidString(req.SocialUsername))
             {
-                return BadRequest(new { message = "Todos los campos son obligatorios y no pueden estar vacíos" });
+                return BadRequest(new
+                {
+                    message = "Todos los campos son obligatorios y no pueden estar vacíos"
+                });
             }
 
             using var conn = _db.GetConnection();
@@ -148,12 +162,12 @@ namespace MreHunter.Api.Controllers
             if (!latestId.HasValue)
                 return NotFound(new { message = "No existe footer para actualizar" });
 
-            var sql = @"UPDATE footer
-                        SET footer_text=@text,
-                            address=@addr,
-                            email=@mail,
-                            social_username=@user
-                        WHERE id=@id;";
+            const string sql = @"UPDATE footer
+                                 SET footer_text=@text,
+                                     address=@addr,
+                                     email=@mail,
+                                     social_username=@user
+                                 WHERE id=@id;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@text", NormalizeValue(req.FooterText));
@@ -167,7 +181,11 @@ namespace MreHunter.Api.Controllers
             if (rows == 0)
                 return NotFound(new { message = "No se pudo actualizar el footer" });
 
-            return Ok(new { message = "Footer actualizado (PUT)", id = latestId.Value });
+            return Ok(new
+            {
+                message = "Footer actualizado (PUT)",
+                id = latestId.Value
+            });
         }
 
         [Authorize]
@@ -189,7 +207,12 @@ namespace MreHunter.Api.Controllers
             if (rows == 0)
                 return NotFound(new { message = "No se pudo eliminar el footer" });
 
-            return Ok(new { message = "Footer eliminado", deleted = true, id = latestId.Value });
+            return Ok(new
+            {
+                message = "Footer eliminado",
+                deleted = true,
+                id = latestId.Value
+            });
         }
     }
 }

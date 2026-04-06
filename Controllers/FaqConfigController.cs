@@ -10,6 +10,7 @@ namespace MreHunter.Api.Controllers
 {
     [ApiController]
     [Route("api/faqconfig")]
+    [Tags("Preguntas Frecuentes")]
     public class FaqConfigController : ControllerBase
     {
         private readonly Db _db;
