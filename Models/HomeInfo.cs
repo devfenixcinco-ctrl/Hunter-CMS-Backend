@@ -15,6 +15,8 @@ public class HomeInfo
     public int? Recoveries { get; set; }
     public int? Captures { get; set; }
 
+    public string? VideoUrl { get; set; }
+
     public List<string>? Countries { get; set; }
 
     public string? SecondBanner { get; set; }

@@ -69,10 +69,11 @@ namespace MreHunter.Api.Controllers
         }
 
         [Authorize]
-        [HttpPut("stats/{id}")]
-        public async Task<IActionResult> UpdateStats(int id, [FromBody] CompanyStat request)
-        {
-            var updated = await _companyService.UpdateCompanyStatsAsync(id, request);
+        [HttpPut("stats")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> UpdateStats([FromBody] CompanyStat request)
+        {   
+            var updated = await _companyService.UpdateCompanyStatsAsync(request.Id, request);
 
             if (!updated)
                 return NotFound(new { message = "No se encontraron estadísticas para actualizar." });

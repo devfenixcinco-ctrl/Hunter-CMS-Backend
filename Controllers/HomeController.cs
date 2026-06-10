@@ -5,6 +5,7 @@ using MySqlConnector;
 using System.Text.Json;
 
 namespace MreHunter.Api.Controllers
+//Prueba de comentario
 {
     [ApiController]
     [Route("api/home")]
@@ -25,76 +26,75 @@ namespace MreHunter.Api.Controllers
         private static int? ReadNullableInt(MySqlDataReader reader, string col)
             => reader[col] == DBNull.Value ? (int?)null : Convert.ToInt32(reader[col]);
 
-      
-    [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        using var conn = _db.GetConnection();
-        await conn.OpenAsync();
-
-        const string sql = "SELECT * FROM home_info ORDER BY id DESC LIMIT 1;";
-        using var cmd = new MySqlCommand(sql, conn);
-        using var reader = await cmd.ExecuteReaderAsync();
-
-        if (!await reader.ReadAsync())
-            return NotFound(new { message = "No hay configuración de Home aún" });
-
-        //  Leer countries como JSON string
-        var countriesJson = ReadNullableString(reader, "countries");
-
-        List<string>? countries = null;
-
-        if (!string.IsNullOrWhiteSpace(countriesJson))
+        [HttpGet]
+        public async Task<IActionResult> Get()
         {
-            try
+            using var conn = _db.GetConnection();
+            await conn.OpenAsync();
+
+            const string sql = "SELECT * FROM home_info ORDER BY id DESC LIMIT 1;";
+            using var cmd = new MySqlCommand(sql, conn);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return NotFound(new { message = "No hay configuración de Home aún" });
+
+            var countriesJson = ReadNullableString(reader, "countries");
+
+            List<string>? countries = null;
+
+            if (!string.IsNullOrWhiteSpace(countriesJson))
             {
-                countries = JsonSerializer.Deserialize<List<string>>(countriesJson);
+                try
+                {
+                    countries = JsonSerializer.Deserialize<List<string>>(countriesJson);
+                }
+                catch
+                {
+                    countries = null;
+                }
             }
-            catch
+
+            var home = new HomeInfo
             {
-                countries = null;
-            }
-        }
+                Id = reader.GetInt32("id"),
 
-        var home = new HomeInfo
-        {
-            Id = reader.GetInt32("id"),
+                BannerTitle = ReadNullableString(reader, "banner_title"),
+                BannerText = ReadNullableString(reader, "banner_text"),
+                VideoUrl = ReadNullableString(reader, "videoUrl"),
 
-            BannerTitle = ReadNullableString(reader, "banner_title"),
-            BannerText = ReadNullableString(reader, "banner_text"),
+                FirstCardTitle = ReadNullableString(reader, "first_card_title"),
+                FirstCardText = ReadNullableString(reader, "first_card_text"),
 
-            FirstCardTitle = ReadNullableString(reader, "first_card_title"),
-            FirstCardText = ReadNullableString(reader, "first_card_text"),
+                NumbersTitle = ReadNullableString(reader, "numbers_title"),
 
-            NumbersTitle = ReadNullableString(reader, "numbers_title"),
+                YearsExperience = ReadNullableInt(reader, "years_experience"),
+                ActiveClients = ReadNullableInt(reader, "active_clients"),
+                Recoveries = ReadNullableInt(reader, "recoveries"),
+                Captures = ReadNullableInt(reader, "captures"),
 
-            YearsExperience = ReadNullableInt(reader, "years_experience"),
-            ActiveClients = ReadNullableInt(reader, "active_clients"),
-            Recoveries = ReadNullableInt(reader, "recoveries"),
-            Captures = ReadNullableInt(reader, "captures"),
+                Countries = countries,
 
-            Countries = countries,
+                SecondBanner = ReadNullableString(reader, "second_banner"),
+                SecondBannerText = ReadNullableString(reader, "second_banner_text"),
+                SecondBannerNumber = ReadNullableString(reader, "second_banner_number"),
 
-            SecondBanner = ReadNullableString(reader, "second_banner"),
-            SecondBannerText = ReadNullableString(reader, "second_banner_text"),
-            SecondBannerNumber = ReadNullableString(reader, "second_banner_number"),
+                ThirdBanner = ReadNullableString(reader, "third_banner"),
+                FourthBanner = ReadNullableString(reader, "fourth_banner"),
 
-            ThirdBanner = ReadNullableString(reader, "third_banner"),
-            FourthBanner = ReadNullableString(reader, "fourth_banner"),
+                FourthBannerTitle = ReadNullableString(reader, "fourth_banner_title"),
+                FourthBannerText = ReadNullableString(reader, "fourth_banner_text"),
 
-            FourthBannerTitle = ReadNullableString(reader, "fourth_banner_title"),
-            FourthBannerText = ReadNullableString(reader, "fourth_banner_text"),
+                ThirdBannerText = ReadNullableString(reader, "third_banner_text"),
+                ThirdBannerHighlight = ReadNullableString(reader, "third_banner_highlight"),
+                ThirdBannerEmphasis = ReadNullableString(reader, "third_banner_emphasis"),
 
-            ThirdBannerText = ReadNullableString(reader, "third_banner_text"),
-            ThirdBannerHighlight = ReadNullableString(reader, "third_banner_highlight"),
-            ThirdBannerEmphasis = ReadNullableString(reader, "third_banner_emphasis"),
-
-            CreatedAt = reader.GetDateTime("created_at")
-        };
+                CreatedAt = reader.GetDateTime("created_at")
+            };
 
             return Ok(home);
-        }   
-        //Upsert
+        }
+
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] HomeUpdateRequest req)
         {
@@ -112,6 +112,7 @@ namespace MreHunter.Api.Controllers
                     UPDATE home_info SET
                         banner_title=@banner_title,
                         banner_text=@banner_text,
+                        videoUrl=@videoUrl,
                         first_card_title=@first_card_title,
                         first_card_text=@first_card_text,
                         numbers_title=@numbers_title,
@@ -136,6 +137,8 @@ namespace MreHunter.Api.Controllers
 
                 cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
+
                 cmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@first_card_text", (object?)req.FirstCardText ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@numbers_title", (object?)req.NumbersTitle ?? DBNull.Value);
@@ -145,7 +148,6 @@ namespace MreHunter.Api.Controllers
                 cmd.Parameters.AddWithValue("@recoveries", (object?)req.Recoveries ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@captures", (object?)req.Captures ?? DBNull.Value);
 
-            
                 cmd.Parameters.AddWithValue(
                     "@countries",
                     req.Countries != null
@@ -175,23 +177,61 @@ namespace MreHunter.Api.Controllers
 
             var insertSql = @"
                 INSERT INTO home_info
-                (banner_title, banner_text, first_card_title, first_card_text, numbers_title,
-                years_experience, active_clients, recoveries, captures, countries,
-                second_banner, second_banner_text, second_banner_number,
-                third_banner, fourth_banner, fourth_banner_title, fourth_banner_text,
-                third_banner_text, third_banner_highlight, third_banner_emphasis)
+                (
+                    banner_title,
+                    banner_text,
+                    videoUrl,
+                    first_card_title,
+                    first_card_text,
+                    numbers_title,
+                    years_experience,
+                    active_clients,
+                    recoveries,
+                    captures,
+                    countries,
+                    second_banner,
+                    second_banner_text,
+                    second_banner_number,
+                    third_banner,
+                    fourth_banner,
+                    fourth_banner_title,
+                    fourth_banner_text,
+                    third_banner_text,
+                    third_banner_highlight,
+                    third_banner_emphasis
+                )
                 VALUES
-                (@banner_title, @banner_text, @first_card_title, @first_card_text, @numbers_title,
-                @years_experience, @active_clients, @recoveries, @captures, @countries,
-                @second_banner, @second_banner_text, @second_banner_number,
-                @third_banner, @fourth_banner, @fourth_banner_title, @fourth_banner_text,
-                @third_banner_text, @third_banner_highlight, @third_banner_emphasis);
+                (
+                    @banner_title,
+                    @banner_text,
+                    @videoUrl,
+                    @first_card_title,
+                    @first_card_text,
+                    @numbers_title,
+                    @years_experience,
+                    @active_clients,
+                    @recoveries,
+                    @captures,
+                    @countries,
+                    @second_banner,
+                    @second_banner_text,
+                    @second_banner_number,
+                    @third_banner,
+                    @fourth_banner,
+                    @fourth_banner_title,
+                    @fourth_banner_text,
+                    @third_banner_text,
+                    @third_banner_highlight,
+                    @third_banner_emphasis
+                );
                 SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
 
             insertCmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
+
             insertCmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@first_card_text", (object?)req.FirstCardText ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@numbers_title", (object?)req.NumbersTitle ?? DBNull.Value);
@@ -226,73 +266,75 @@ namespace MreHunter.Api.Controllers
             return Ok(new { message = "Home creado (POST)", created = true, id = newId });
         }
 
-        //  (actualiza id=1)
         [HttpPut]
-    public async Task<IActionResult> Update([FromBody] HomeUpdateRequest req)
-    {
-    using var conn = _db.GetConnection();
-    await conn.OpenAsync();
+        public async Task<IActionResult> Update([FromBody] HomeUpdateRequest req)
+        {
+            using var conn = _db.GetConnection();
+            await conn.OpenAsync();
 
-    var sql = @"
-        UPDATE home_info SET
-            banner_title=@banner_title,
-            banner_text=@banner_text,
-            first_card_title=@first_card_title,
-            first_card_text=@first_card_text,
-            numbers_title=@numbers_title,
-            years_experience=@years_experience,
-            active_clients=@active_clients,
-            recoveries=@recoveries,
-            captures=@captures,
-            countries=@countries,
-            second_banner=@second_banner,
-            second_banner_text=@second_banner_text,
-            second_banner_number=@second_banner_number,
-            third_banner=@third_banner,
-            fourth_banner=@fourth_banner,
-            fourth_banner_title=@fourth_banner_title,
-            fourth_banner_text=@fourth_banner_text,
-            third_banner_text=@third_banner_text,
-            third_banner_highlight=@third_banner_highlight,
-            third_banner_emphasis=@third_banner_emphasis
-        WHERE id=1;";
+            var sql = @"
+                UPDATE home_info SET
+                    banner_title=@banner_title,
+                    banner_text=@banner_text,
+                    videoUrl=@videoUrl,
+                    first_card_title=@first_card_title,
+                    first_card_text=@first_card_text,
+                    numbers_title=@numbers_title,
+                    years_experience=@years_experience,
+                    active_clients=@active_clients,
+                    recoveries=@recoveries,
+                    captures=@captures,
+                    countries=@countries,
+                    second_banner=@second_banner,
+                    second_banner_text=@second_banner_text,
+                    second_banner_number=@second_banner_number,
+                    third_banner=@third_banner,
+                    fourth_banner=@fourth_banner,
+                    fourth_banner_title=@fourth_banner_title,
+                    fourth_banner_text=@fourth_banner_text,
+                    third_banner_text=@third_banner_text,
+                    third_banner_highlight=@third_banner_highlight,
+                    third_banner_emphasis=@third_banner_emphasis
+                WHERE id=1;";
 
-    using var cmd = new MySqlCommand(sql, conn);
+            using var cmd = new MySqlCommand(sql, conn);
 
-    cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@first_card_text", (object?)req.FirstCardText ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@numbers_title", (object?)req.NumbersTitle ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
 
-    cmd.Parameters.AddWithValue("@years_experience", (object?)req.YearsExperience ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@active_clients", (object?)req.ActiveClients ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@recoveries", (object?)req.Recoveries ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@captures", (object?)req.Captures ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@first_card_text", (object?)req.FirstCardText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@numbers_title", (object?)req.NumbersTitle ?? DBNull.Value);
 
-    cmd.Parameters.AddWithValue(
-        "@countries",
-        req.Countries != null
-            ? JsonSerializer.Serialize(req.Countries)
-            : DBNull.Value
-    );
+            cmd.Parameters.AddWithValue("@years_experience", (object?)req.YearsExperience ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@active_clients", (object?)req.ActiveClients ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@recoveries", (object?)req.Recoveries ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@captures", (object?)req.Captures ?? DBNull.Value);
 
-    cmd.Parameters.AddWithValue("@second_banner", (object?)req.SecondBanner ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@second_banner_text", (object?)req.SecondBannerText ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@second_banner_number", (object?)req.SecondBannerNumber ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(
+                "@countries",
+                req.Countries != null
+                    ? JsonSerializer.Serialize(req.Countries)
+                    : DBNull.Value
+            );
 
-    cmd.Parameters.AddWithValue("@third_banner", (object?)req.ThirdBanner ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@fourth_banner", (object?)req.FourthBanner ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@fourth_banner_title", (object?)req.FourthBannerTitle ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@fourth_banner_text", (object?)req.FourthBannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@second_banner", (object?)req.SecondBanner ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@second_banner_text", (object?)req.SecondBannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@second_banner_number", (object?)req.SecondBannerNumber ?? DBNull.Value);
 
-    cmd.Parameters.AddWithValue("@third_banner_text", (object?)req.ThirdBannerText ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@third_banner_highlight", (object?)req.ThirdBannerHighlight ?? DBNull.Value);
-    cmd.Parameters.AddWithValue("@third_banner_emphasis", (object?)req.ThirdBannerEmphasis ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@third_banner", (object?)req.ThirdBanner ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@fourth_banner", (object?)req.FourthBanner ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@fourth_banner_title", (object?)req.FourthBannerTitle ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@fourth_banner_text", (object?)req.FourthBannerText ?? DBNull.Value);
 
-    await cmd.ExecuteNonQueryAsync();
+            cmd.Parameters.AddWithValue("@third_banner_text", (object?)req.ThirdBannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@third_banner_highlight", (object?)req.ThirdBannerHighlight ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@third_banner_emphasis", (object?)req.ThirdBannerEmphasis ?? DBNull.Value);
 
-    return Ok(new { message = "Home actualizado (PUT)" });
-    }
+            await cmd.ExecuteNonQueryAsync();
+
+            return Ok(new { message = "Home actualizado (PUT)" });
+        }
     }
 }

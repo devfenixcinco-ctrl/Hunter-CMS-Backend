@@ -10,6 +10,8 @@ namespace MreHunter.Api.Models
 
         public string? NumbersTitle { get; set; }
 
+        public string? VideoUrl { get; set; }
+
         public int? YearsExperience { get; set; }
         public int? ActiveClients { get; set; }
         public int? Recoveries { get; set; }

@@ -8,8 +8,13 @@ namespace MreHunter.Api.Models
         public string? Icon { get; set; }
         public string? ButtonText { get; set; }
         public string? ButtonLink { get; set; }
-        public int DisplayOrder { get; set; }
-        public bool IsActive { get; set; }
+        public string? Price { get; set; }
+        public string? ButtonTextVideo { get; set; }
+        public string? ButtonLinkVideo { get; set; }
+        public string? ButtonTextWanted { get; set; }
+        public string? ButtonLinkWanted { get; set; }
+   
+
         public DateTime CreatedAt { get; set; }
     }
 }

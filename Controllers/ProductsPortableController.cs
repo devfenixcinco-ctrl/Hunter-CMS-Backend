@@ -7,7 +7,7 @@ namespace MreHunter.Api.Controllers
 {
     [ApiController]
     [Route("api/portable-products")]
-    [Tags("Producto Portable ")]
+    [Tags("Producto Portable")]
     public class ProductsPortableController : ControllerBase
     {
         private readonly ProductsPortableService _productsPortableService;
@@ -23,7 +23,7 @@ namespace MreHunter.Api.Controllers
             var result = await _productsPortableService.GetAsync();
 
             if (result == null)
-                return NotFound(new { message = "No se encontró información de Products Portable." });
+                return NotFound(new { message = "No se encontró información del producto Portable." });
 
             return Ok(result);
         }
@@ -41,7 +41,7 @@ namespace MreHunter.Api.Controllers
 
             return Ok(new
             {
-                message = "Products Portable creado correctamente.",
+                message = "Producto Portable creado correctamente.",
                 id = newId
             });
         }
@@ -59,9 +59,9 @@ namespace MreHunter.Api.Controllers
             );
 
             if (!updated)
-                return NotFound(new { message = "No se encontró Products Portable para actualizar." });
+                return NotFound(new { message = "No se encontró producto Portable para actualizar." });
 
-            return Ok(new { message = "Products Portable actualizado correctamente." });
+            return Ok(new { message = "Producto Portable actualizado correctamente." });
         }
     }
 }

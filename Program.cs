@@ -4,11 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MreHunter.Api.Data;
 using MreHunter.Api.Services;
+using MreHunter.Api.Middleware;
+using MreHunter.Api.Models.Examples;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using System.Threading.RateLimiting;
-using MreHunter.Api.Middleware;
-using Swashbuckle.AspNetCore.Filters;
-using MreHunter.Api.Models.Examples;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,10 +19,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:4200",
-                "http://192.168.2.200:4200"
-            )
+       policy.WithOrigins(
+        "http://localhost:4200",
+        "http://192.168.2.200:4200",
+        "http://192.168.2.133:4200"
+    )
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -42,8 +43,11 @@ builder.Services.AddRateLimiter(options =>
             : forwardedFor.Split(',')[0].Trim();
 
         var userAgent = httpContext.Request.Headers["User-Agent"].ToString();
-        if (string.IsNullOrWhiteSpace(userAgent)) userAgent = "no-ua";
-        if (userAgent.Length > 64) userAgent = userAgent[..64];
+        if (string.IsNullOrWhiteSpace(userAgent))
+            userAgent = "no-ua";
+
+        if (userAgent.Length > 64)
+            userAgent = userAgent[..64];
 
         var partitionKey = string.IsNullOrWhiteSpace(sessionId)
             ? $"anon:{ip}|ua:{userAgent}"
@@ -133,12 +137,20 @@ builder.Services
 
 builder.Services.AddSingleton<Db>();
 builder.Services.AddTransient<EmailService>();
+
 builder.Services.AddScoped<ProductsService>();
 builder.Services.AddScoped<CompanyService>();
 builder.Services.AddScoped<ProductsPetsService>();
 builder.Services.AddScoped<ProductsDashcamService>();
 builder.Services.AddScoped<ProductsPortableService>();
+builder.Services.AddScoped<PortableBenefitsService>();
+builder.Services.AddScoped<PortableMediaSectionsService>();
+builder.Services.AddScoped<DashcamMediaSectionsService>();
+builder.Services.AddScoped<DashcamBenefitsService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GpsSectionService>();
+builder.Services.AddScoped<PlanPlusSectionService>();
+
 
 var app = builder.Build();
 

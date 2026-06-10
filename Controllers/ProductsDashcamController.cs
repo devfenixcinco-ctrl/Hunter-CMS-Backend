@@ -58,12 +58,9 @@ namespace MreHunter.Api.Controllers
                 heroHighlightText = ReadNullableString(reader, "hero_highlight_text"),
                 heroSubtitle = ReadNullableString(reader, "hero_subtitle"),
                 benefitsTitle = ReadNullableString(reader, "benefits_title"),
-                benefitsJson = ReadNullableString(reader, "benefits_json"),
                 reasonTitle = ReadNullableString(reader, "reason_title"),
                 reasonDescription = ReadNullableString(reader, "reason_description"),
-                mediaSectionsJson = ReadNullableString(reader, "media_sections_json"),
                 paymentTitle = ReadNullableString(reader, "payment_title"),
-                paymentMethodsJson = ReadNullableString(reader, "payment_methods_json"),
                 primaryButtonText = ReadNullableString(reader, "primary_button_text"),
                 primaryButtonLink = ReadNullableString(reader, "primary_button_link"),
                 secondaryButtonText = ReadNullableString(reader, "secondary_button_text"),
@@ -93,16 +90,6 @@ namespace MreHunter.Api.Controllers
                 return BadRequest(new { message = "Los campos de texto obligatorios no pueden estar vacíos" });
             }
 
-            if (!_service.IsValidJson(req.BenefitsJson) ||
-                !_service.IsValidJson(req.MediaSectionsJson) ||
-                !_service.IsValidJson(req.PaymentMethodsJson))
-            {
-                return BadRequest(new
-                {
-                    message = "BenefitsJson, MediaSectionsJson y PaymentMethodsJson deben contener JSON válido"
-                });
-            }
-
             string? heroImageUrl = req.HeroImageUrl;
 
             if (req.HeroImage != null)
@@ -124,12 +111,9 @@ namespace MreHunter.Api.Controllers
                                                hero_highlight_text=@heroHighlightText,
                                                hero_subtitle=@heroSubtitle,
                                                benefits_title=@benefitsTitle,
-                                               benefits_json=@benefitsJson,
                                                reason_title=@reasonTitle,
                                                reason_description=@reasonDescription,
-                                               media_sections_json=@mediaSectionsJson,
                                                payment_title=@paymentTitle,
-                                               payment_methods_json=@paymentMethodsJson,
                                                primary_button_text=@primaryButtonText,
                                                primary_button_link=@primaryButtonLink,
                                                secondary_button_text=@secondaryButtonText,
@@ -142,12 +126,9 @@ namespace MreHunter.Api.Controllers
                 cmd.Parameters.AddWithValue("@heroHighlightText", _service.NormalizeValue(req.HeroHighlightText));
                 cmd.Parameters.AddWithValue("@heroSubtitle", _service.NormalizeValue(req.HeroSubtitle));
                 cmd.Parameters.AddWithValue("@benefitsTitle", _service.NormalizeValue(req.BenefitsTitle));
-                cmd.Parameters.AddWithValue("@benefitsJson", _service.NormalizeValue(req.BenefitsJson));
                 cmd.Parameters.AddWithValue("@reasonTitle", _service.NormalizeValue(req.ReasonTitle));
                 cmd.Parameters.AddWithValue("@reasonDescription", _service.NormalizeValue(req.ReasonDescription));
-                cmd.Parameters.AddWithValue("@mediaSectionsJson", _service.NormalizeValue(req.MediaSectionsJson));
                 cmd.Parameters.AddWithValue("@paymentTitle", _service.NormalizeValue(req.PaymentTitle));
-                cmd.Parameters.AddWithValue("@paymentMethodsJson", _service.NormalizeValue(req.PaymentMethodsJson));
                 cmd.Parameters.AddWithValue("@primaryButtonText", _service.NormalizeValue(req.PrimaryButtonText));
                 cmd.Parameters.AddWithValue("@primaryButtonLink", _service.NormalizeValue(req.PrimaryButtonLink));
                 cmd.Parameters.AddWithValue("@secondaryButtonText", _service.NormalizeValue(req.SecondaryButtonText));
@@ -170,18 +151,16 @@ namespace MreHunter.Api.Controllers
 
             const string insertSql = @"INSERT INTO products_dashcam
                                        (hero_image_url, hero_title, hero_highlight_text, hero_subtitle,
-                                        benefits_title, benefits_json,
+                                        benefits_title,
                                         reason_title, reason_description,
-                                        media_sections_json,
-                                        payment_title, payment_methods_json,
+                                        payment_title,
                                         primary_button_text, primary_button_link,
                                         secondary_button_text, secondary_button_link)
                                        VALUES
                                        (@heroImageUrl, @heroTitle, @heroHighlightText, @heroSubtitle,
-                                        @benefitsTitle, @benefitsJson,
+                                        @benefitsTitle,
                                         @reasonTitle, @reasonDescription,
-                                        @mediaSectionsJson,
-                                        @paymentTitle, @paymentMethodsJson,
+                                        @paymentTitle,
                                         @primaryButtonText, @primaryButtonLink,
                                         @secondaryButtonText, @secondaryButtonLink);
                                        SELECT LAST_INSERT_ID();";
@@ -192,12 +171,9 @@ namespace MreHunter.Api.Controllers
             insertCmd.Parameters.AddWithValue("@heroHighlightText", _service.NormalizeValue(req.HeroHighlightText));
             insertCmd.Parameters.AddWithValue("@heroSubtitle", _service.NormalizeValue(req.HeroSubtitle));
             insertCmd.Parameters.AddWithValue("@benefitsTitle", _service.NormalizeValue(req.BenefitsTitle));
-            insertCmd.Parameters.AddWithValue("@benefitsJson", _service.NormalizeValue(req.BenefitsJson));
             insertCmd.Parameters.AddWithValue("@reasonTitle", _service.NormalizeValue(req.ReasonTitle));
             insertCmd.Parameters.AddWithValue("@reasonDescription", _service.NormalizeValue(req.ReasonDescription));
-            insertCmd.Parameters.AddWithValue("@mediaSectionsJson", _service.NormalizeValue(req.MediaSectionsJson));
             insertCmd.Parameters.AddWithValue("@paymentTitle", _service.NormalizeValue(req.PaymentTitle));
-            insertCmd.Parameters.AddWithValue("@paymentMethodsJson", _service.NormalizeValue(req.PaymentMethodsJson));
             insertCmd.Parameters.AddWithValue("@primaryButtonText", _service.NormalizeValue(req.PrimaryButtonText));
             insertCmd.Parameters.AddWithValue("@primaryButtonLink", _service.NormalizeValue(req.PrimaryButtonLink));
             insertCmd.Parameters.AddWithValue("@secondaryButtonText", _service.NormalizeValue(req.SecondaryButtonText));
@@ -235,16 +211,6 @@ namespace MreHunter.Api.Controllers
                 return BadRequest(new { message = "Los campos de texto obligatorios no pueden estar vacíos" });
             }
 
-            if (!_service.IsValidJson(req.BenefitsJson) ||
-                !_service.IsValidJson(req.MediaSectionsJson) ||
-                !_service.IsValidJson(req.PaymentMethodsJson))
-            {
-                return BadRequest(new
-                {
-                    message = "BenefitsJson, MediaSectionsJson y PaymentMethodsJson deben contener JSON válido"
-                });
-            }
-
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
@@ -268,12 +234,9 @@ namespace MreHunter.Api.Controllers
                                      hero_highlight_text=@heroHighlightText,
                                      hero_subtitle=@heroSubtitle,
                                      benefits_title=@benefitsTitle,
-                                     benefits_json=@benefitsJson,
                                      reason_title=@reasonTitle,
                                      reason_description=@reasonDescription,
-                                     media_sections_json=@mediaSectionsJson,
                                      payment_title=@paymentTitle,
-                                     payment_methods_json=@paymentMethodsJson,
                                      primary_button_text=@primaryButtonText,
                                      primary_button_link=@primaryButtonLink,
                                      secondary_button_text=@secondaryButtonText,
@@ -286,12 +249,9 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@heroHighlightText", _service.NormalizeValue(req.HeroHighlightText));
             cmd.Parameters.AddWithValue("@heroSubtitle", _service.NormalizeValue(req.HeroSubtitle));
             cmd.Parameters.AddWithValue("@benefitsTitle", _service.NormalizeValue(req.BenefitsTitle));
-            cmd.Parameters.AddWithValue("@benefitsJson", _service.NormalizeValue(req.BenefitsJson));
             cmd.Parameters.AddWithValue("@reasonTitle", _service.NormalizeValue(req.ReasonTitle));
             cmd.Parameters.AddWithValue("@reasonDescription", _service.NormalizeValue(req.ReasonDescription));
-            cmd.Parameters.AddWithValue("@mediaSectionsJson", _service.NormalizeValue(req.MediaSectionsJson));
             cmd.Parameters.AddWithValue("@paymentTitle", _service.NormalizeValue(req.PaymentTitle));
-            cmd.Parameters.AddWithValue("@paymentMethodsJson", _service.NormalizeValue(req.PaymentMethodsJson));
             cmd.Parameters.AddWithValue("@primaryButtonText", _service.NormalizeValue(req.PrimaryButtonText));
             cmd.Parameters.AddWithValue("@primaryButtonLink", _service.NormalizeValue(req.PrimaryButtonLink));
             cmd.Parameters.AddWithValue("@secondaryButtonText", _service.NormalizeValue(req.SecondaryButtonText));

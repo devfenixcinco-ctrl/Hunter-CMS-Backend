@@ -37,24 +37,34 @@ namespace MreHunter.Api.Services
             {
                 Id = reader.GetInt32("id"),
                 HeroTitle = reader.GetString("hero_title"),
-                HeroSubtitle = reader.IsDBNull(reader.GetOrdinal("hero_subtitle")) ? null : reader.GetString("hero_subtitle"),
-                HeroHighlightText = reader.IsDBNull(reader.GetOrdinal("hero_highlight_text")) ? null : reader.GetString("hero_highlight_text"),
-                HeroImageUrl = reader.IsDBNull(reader.GetOrdinal("hero_image_url")) ? null : reader.GetString("hero_image_url"),
-
-                BenefitsTitle = reader.GetString("benefits_title"),
-                BenefitsJson = reader.IsDBNull(reader.GetOrdinal("benefits_json")) ? null : reader.GetString("benefits_json"),
+                HeroSubtitle = reader.IsDBNull(reader.GetOrdinal("hero_subtitle"))
+                    ? null
+                    : reader.GetString("hero_subtitle"),
+                HeroHighlightText = reader.IsDBNull(reader.GetOrdinal("hero_highlight_text"))
+                    ? null
+                    : reader.GetString("hero_highlight_text"),
+                HeroImageUrl = reader.IsDBNull(reader.GetOrdinal("hero_image_url"))
+                    ? null
+                    : reader.GetString("hero_image_url"),
 
                 ReasonTitle = reader.GetString("reason_title"),
-                ReasonDescription = reader.IsDBNull(reader.GetOrdinal("reason_description")) ? null : reader.GetString("reason_description"),
-
-                MediaSectionsJson = reader.IsDBNull(reader.GetOrdinal("media_sections_json")) ? null : reader.GetString("media_sections_json"),
+                ReasonDescription = reader.IsDBNull(reader.GetOrdinal("reason_description"))
+                    ? null
+                    : reader.GetString("reason_description"),
 
                 PaymentTitle = reader.GetString("payment_title"),
-                PrimaryButtonText = reader.IsDBNull(reader.GetOrdinal("primary_button_text")) ? null : reader.GetString("primary_button_text"),
-                PrimaryButtonLink = reader.IsDBNull(reader.GetOrdinal("primary_button_link")) ? null : reader.GetString("primary_button_link"),
-                SecondaryButtonText = reader.IsDBNull(reader.GetOrdinal("secondary_button_text")) ? null : reader.GetString("secondary_button_text"),
-                SecondaryButtonLink = reader.IsDBNull(reader.GetOrdinal("secondary_button_link")) ? null : reader.GetString("secondary_button_link"),
-                PaymentMethodsJson = reader.IsDBNull(reader.GetOrdinal("payment_methods_json")) ? null : reader.GetString("payment_methods_json"),
+                PrimaryButtonText = reader.IsDBNull(reader.GetOrdinal("primary_button_text"))
+                    ? null
+                    : reader.GetString("primary_button_text"),
+                PrimaryButtonLink = reader.IsDBNull(reader.GetOrdinal("primary_button_link"))
+                    ? null
+                    : reader.GetString("primary_button_link"),
+                SecondaryButtonText = reader.IsDBNull(reader.GetOrdinal("secondary_button_text"))
+                    ? null
+                    : reader.GetString("secondary_button_text"),
+                SecondaryButtonLink = reader.IsDBNull(reader.GetOrdinal("secondary_button_link"))
+                    ? null
+                    : reader.GetString("secondary_button_link"),
 
                 CreatedAt = reader.GetDateTime("created_at"),
                 UpdatedAt = reader.GetDateTime("updated_at")
@@ -72,27 +82,43 @@ namespace MreHunter.Api.Services
 
             if (request.HeroImage != null)
             {
-                heroImageUrl = await SaveImage(request.HeroImage, "productsportable", "hero_image", scheme, host);
+                heroImageUrl = await SaveImage(
+                    request.HeroImage,
+                    "productsportable",
+                    "hero_image",
+                    scheme,
+                    host
+                );
             }
 
             var query = @"
                 INSERT INTO products_portable
                 (
-                    hero_title, hero_subtitle, hero_highlight_text, hero_image_url,
-                    benefits_title, benefits_json,
-                    reason_title, reason_description,
-                    media_sections_json,
-                    payment_title, primary_button_text, primary_button_link,
-                    secondary_button_text, secondary_button_link, payment_methods_json
+                    hero_title,
+                    hero_subtitle,
+                    hero_highlight_text,
+                    hero_image_url,
+                    reason_title,
+                    reason_description,
+                    payment_title,
+                    primary_button_text,
+                    primary_button_link,
+                    secondary_button_text,
+                    secondary_button_link
                 )
                 VALUES
                 (
-                    @HeroTitle, @HeroSubtitle, @HeroHighlightText, @HeroImageUrl,
-                    @BenefitsTitle, @BenefitsJson,
-                    @ReasonTitle, @ReasonDescription,
-                    @MediaSectionsJson,
-                    @PaymentTitle, @PrimaryButtonText, @PrimaryButtonLink,
-                    @SecondaryButtonText, @SecondaryButtonLink, @PaymentMethodsJson
+                    @HeroTitle,
+                    @HeroSubtitle,
+                    @HeroHighlightText,
+                    @HeroImageUrl,
+                    @ReasonTitle,
+                    @ReasonDescription,
+                    @PaymentTitle,
+                    @PrimaryButtonText,
+                    @PrimaryButtonLink,
+                    @SecondaryButtonText,
+                    @SecondaryButtonLink
                 );
                 SELECT LAST_INSERT_ID();
             ";
@@ -103,20 +129,14 @@ namespace MreHunter.Api.Services
             command.Parameters.AddWithValue("@HeroHighlightText", (object?)request.HeroHighlightText ?? DBNull.Value);
             command.Parameters.AddWithValue("@HeroImageUrl", (object?)heroImageUrl ?? DBNull.Value);
 
-            command.Parameters.AddWithValue("@BenefitsTitle", request.BenefitsTitle);
-            command.Parameters.AddWithValue("@BenefitsJson", (object?)request.BenefitsJson ?? DBNull.Value);
-
             command.Parameters.AddWithValue("@ReasonTitle", request.ReasonTitle);
             command.Parameters.AddWithValue("@ReasonDescription", (object?)request.ReasonDescription ?? DBNull.Value);
-
-            command.Parameters.AddWithValue("@MediaSectionsJson", (object?)request.MediaSectionsJson ?? DBNull.Value);
 
             command.Parameters.AddWithValue("@PaymentTitle", request.PaymentTitle);
             command.Parameters.AddWithValue("@PrimaryButtonText", (object?)request.PrimaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@PrimaryButtonLink", (object?)request.PrimaryButtonLink ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonText", (object?)request.SecondaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonLink", (object?)request.SecondaryButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@PaymentMethodsJson", (object?)request.PaymentMethodsJson ?? DBNull.Value);
 
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
@@ -131,7 +151,9 @@ namespace MreHunter.Api.Services
 
             string? heroImageUrl = null;
 
-            using (var getCurrent = new MySqlCommand("SELECT hero_image_url FROM products_portable WHERE id = @Id LIMIT 1;", connection))
+            using (var getCurrent = new MySqlCommand(
+                "SELECT hero_image_url FROM products_portable WHERE id = @Id LIMIT 1;",
+                connection))
             {
                 getCurrent.Parameters.AddWithValue("@Id", id);
                 var currentObj = await getCurrent.ExecuteScalarAsync();
@@ -144,7 +166,13 @@ namespace MreHunter.Api.Services
 
             if (request.HeroImage != null)
             {
-                heroImageUrl = await SaveImage(request.HeroImage, "productsportable", "hero_image", scheme, host);
+                heroImageUrl = await SaveImage(
+                    request.HeroImage,
+                    "productsportable",
+                    "hero_image",
+                    scheme,
+                    host
+                );
             }
 
             var query = @"
@@ -153,21 +181,13 @@ namespace MreHunter.Api.Services
                     hero_subtitle = @HeroSubtitle,
                     hero_highlight_text = @HeroHighlightText,
                     hero_image_url = @HeroImageUrl,
-
-                    benefits_title = @BenefitsTitle,
-                    benefits_json = @BenefitsJson,
-
                     reason_title = @ReasonTitle,
                     reason_description = @ReasonDescription,
-
-                    media_sections_json = @MediaSectionsJson,
-
                     payment_title = @PaymentTitle,
                     primary_button_text = @PrimaryButtonText,
                     primary_button_link = @PrimaryButtonLink,
                     secondary_button_text = @SecondaryButtonText,
-                    secondary_button_link = @SecondaryButtonLink,
-                    payment_methods_json = @PaymentMethodsJson
+                    secondary_button_link = @SecondaryButtonLink
                 WHERE id = @Id;
             ";
 
@@ -179,26 +199,25 @@ namespace MreHunter.Api.Services
             command.Parameters.AddWithValue("@HeroHighlightText", (object?)request.HeroHighlightText ?? DBNull.Value);
             command.Parameters.AddWithValue("@HeroImageUrl", (object?)heroImageUrl ?? DBNull.Value);
 
-            command.Parameters.AddWithValue("@BenefitsTitle", request.BenefitsTitle);
-            command.Parameters.AddWithValue("@BenefitsJson", (object?)request.BenefitsJson ?? DBNull.Value);
-
             command.Parameters.AddWithValue("@ReasonTitle", request.ReasonTitle);
             command.Parameters.AddWithValue("@ReasonDescription", (object?)request.ReasonDescription ?? DBNull.Value);
-
-            command.Parameters.AddWithValue("@MediaSectionsJson", (object?)request.MediaSectionsJson ?? DBNull.Value);
 
             command.Parameters.AddWithValue("@PaymentTitle", request.PaymentTitle);
             command.Parameters.AddWithValue("@PrimaryButtonText", (object?)request.PrimaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@PrimaryButtonLink", (object?)request.PrimaryButtonLink ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonText", (object?)request.SecondaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonLink", (object?)request.SecondaryButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@PaymentMethodsJson", (object?)request.PaymentMethodsJson ?? DBNull.Value);
 
             var rows = await command.ExecuteNonQueryAsync();
             return rows > 0;
         }
 
-        private async Task<string> SaveImage(IFormFile file, string folder, string fileNameWithoutExtension, string scheme, string host)
+        private async Task<string> SaveImage(
+            IFormFile file,
+            string folder,
+            string fileNameWithoutExtension,
+            string scheme,
+            string host)
         {
             if (file == null || file.Length == 0)
                 throw new Exception("No se recibió ningún archivo.");

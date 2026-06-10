@@ -4,7 +4,7 @@ namespace MreHunter.Api.Models
 {
     public class Header
     {
-        [Required]
+
         public int Id { get; set; }
 
         [Required]
@@ -13,7 +13,7 @@ namespace MreHunter.Api.Models
         [Required]
         public string TheftNumber { get; set; } = string.Empty;
 
-        [Required]
+   
         public DateTime CreatedAt { get; set; }
     }
 }

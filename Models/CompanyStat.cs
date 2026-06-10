@@ -14,6 +14,6 @@ namespace MreHunter.Api.Models
         public string CapturesCount { get; set; } = string.Empty;
         public string CapturesLabel { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
     }
 }

@@ -7,7 +7,8 @@ using MySqlConnector;
 namespace MreHunter.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/payment-methods")]
+    [Tags("Métodos de Pago")]
     public class PaymentMethodController : ControllerBase
     {
         private readonly Db _db;
@@ -17,15 +18,14 @@ namespace MreHunter.Api.Controllers
             _db = db;
         }
 
-        private bool HasInvalidRequiredFields(PaymentMethodRequest req)
+      private bool HasInvalidRequiredFields(PaymentMethodRequest req)
         {
             return string.IsNullOrWhiteSpace(req.Title) ||
-                   string.IsNullOrWhiteSpace(req.Description) ||
-                   string.IsNullOrWhiteSpace(req.Icon) ||
-                   string.IsNullOrWhiteSpace(req.ButtonText) ||
-                   string.IsNullOrWhiteSpace(req.ButtonLink) ||
-                   req.DisplayOrder <= 0;
+                string.IsNullOrWhiteSpace(req.Price) ||
+                string.IsNullOrWhiteSpace(req.Description) ||
+                string.IsNullOrWhiteSpace(req.Icon);
         }
+                
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -33,9 +33,21 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"SELECT id, title, description, icon, button_text, button_link, display_order, is_active, created_at
-                        FROM payment_methods
-                        ORDER BY display_order ASC, id ASC;";
+            var sql = @"
+                SELECT 
+                    id,
+                    title,
+                    price,
+                    description,
+                    icon,
+                    buttonTextVideo,
+                    buttonLinkVideo,
+                    buttonTextWanted,
+                    buttonLinkWanted,
+                    created_at
+                FROM payment_methods
+                ORDER BY id ASC;
+            ";
 
             using var cmd = new MySqlCommand(sql, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -47,13 +59,14 @@ namespace MreHunter.Api.Controllers
                 items.Add(new PaymentMethod
                 {
                     Id = reader.GetInt32("id"),
-                    Title = reader.GetString("title"),
+                    Title = reader["title"]?.ToString(),
+                    Price = reader["price"]?.ToString(),
                     Description = reader["description"]?.ToString(),
                     Icon = reader["icon"]?.ToString(),
-                    ButtonText = reader["button_text"]?.ToString(),
-                    ButtonLink = reader["button_link"]?.ToString(),
-                    DisplayOrder = reader.GetInt32("display_order"),
-                    IsActive = reader.GetBoolean("is_active"),
+                    ButtonTextVideo = reader["buttonTextVideo"]?.ToString(),
+                    ButtonLinkVideo = reader["buttonLinkVideo"]?.ToString(),
+                    ButtonTextWanted = reader["buttonTextWanted"]?.ToString(),
+                    ButtonLinkWanted = reader["buttonLinkWanted"]?.ToString(),
                     CreatedAt = reader.GetDateTime("created_at")
                 });
             }
@@ -67,9 +80,21 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"SELECT id, title, description, icon, button_text, button_link, display_order, is_active, created_at
-                        FROM payment_methods
-                        WHERE id = @id;";
+            var sql = @"
+                SELECT 
+                    id,
+                    title,
+                    price,
+                    description,
+                    icon,
+                    buttonTextVideo,
+                    buttonLinkVideo,
+                    buttonTextWanted,
+                    buttonLinkWanted,
+                    created_at
+                FROM payment_methods
+                WHERE id = @id;
+            ";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -82,13 +107,14 @@ namespace MreHunter.Api.Controllers
             var item = new PaymentMethod
             {
                 Id = reader.GetInt32("id"),
-                Title = reader.GetString("title"),
+                Title = reader["title"]?.ToString(),
+                Price = reader["price"]?.ToString(),
                 Description = reader["description"]?.ToString(),
                 Icon = reader["icon"]?.ToString(),
-                ButtonText = reader["button_text"]?.ToString(),
-                ButtonLink = reader["button_link"]?.ToString(),
-                DisplayOrder = reader.GetInt32("display_order"),
-                IsActive = reader.GetBoolean("is_active"),
+                ButtonTextVideo = reader["buttonTextVideo"]?.ToString(),
+                ButtonLinkVideo = reader["buttonLinkVideo"]?.ToString(),
+                ButtonTextWanted = reader["buttonTextWanted"]?.ToString(),
+                ButtonLinkWanted = reader["buttonLinkWanted"]?.ToString(),
                 CreatedAt = reader.GetDateTime("created_at")
             };
 
@@ -109,27 +135,49 @@ namespace MreHunter.Api.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Title, Description, Icon, ButtonText y ButtonLink son obligatorios y DisplayOrder debe ser mayor a 0."
+                    message = "Title, Price, Description, Icon, ButtonTextVideo, ButtonLinkVideo, ButtonTextWanted y ButtonLinkWanted son obligatorios."
                 });
             }
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"INSERT INTO payment_methods
-                        (title, description, icon, button_text, button_link, display_order, is_active)
-                        VALUES
-                        (@title, @description, @icon, @buttonText, @buttonLink, @displayOrder, @isActive);
-                        SELECT LAST_INSERT_ID();";
+            var sql = @"
+                INSERT INTO payment_methods
+                (
+                    title,
+                    price,
+                    description,
+                    icon,
+                    buttonTextVideo,
+                    buttonLinkVideo,
+                    buttonTextWanted,
+                    buttonLinkWanted
+                )
+                VALUES
+                (
+                    @title,
+                    @price,
+                    @description,
+                    @icon,
+                    @buttonTextVideo,
+                    @buttonLinkVideo,
+                    @buttonTextWanted,
+                    @buttonLinkWanted
+                );
+                SELECT LAST_INSERT_ID();
+            ";
 
             using var cmd = new MySqlCommand(sql, conn);
+
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
+            cmd.Parameters.AddWithValue("@price", req.Price?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@icon", req.Icon?.Trim());
-            cmd.Parameters.AddWithValue("@buttonText", req.ButtonText?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLink", req.ButtonLink?.Trim());
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
+            cmd.Parameters.AddWithValue("@buttonTextVideo", req.ButtonTextVideo?.Trim());
+            cmd.Parameters.AddWithValue("@buttonLinkVideo", req.ButtonLinkVideo?.Trim());
+            cmd.Parameters.AddWithValue("@buttonTextWanted", req.ButtonTextWanted?.Trim());
+            cmd.Parameters.AddWithValue("@buttonLinkWanted", req.ButtonLinkWanted?.Trim());
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -154,31 +202,37 @@ namespace MreHunter.Api.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Title, Description, Icon, ButtonText y ButtonLink son obligatorios y DisplayOrder debe ser mayor a 0."
+                    message = "Title, Price, Description, Icon, ButtonTextVideo, ButtonLinkVideo, ButtonTextWanted y ButtonLinkWanted son obligatorios."
                 });
             }
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"UPDATE payment_methods
-                        SET title = @title,
-                            description = @description,
-                            icon = @icon,
-                            button_text = @buttonText,
-                            button_link = @buttonLink,
-                            display_order = @displayOrder,
-                            is_active = @isActive
-                        WHERE id = @id;";
+            var sql = @"
+                UPDATE payment_methods
+                SET 
+                    title = @title,
+                    price = @price,
+                    description = @description,
+                    icon = @icon,
+                    buttonTextVideo = @buttonTextVideo,
+                    buttonLinkVideo = @buttonLinkVideo,
+                    buttonTextWanted = @buttonTextWanted,
+                    buttonLinkWanted = @buttonLinkWanted
+                WHERE id = @id;
+            ";
 
             using var cmd = new MySqlCommand(sql, conn);
+
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
+            cmd.Parameters.AddWithValue("@price", req.Price?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@icon", req.Icon?.Trim());
-            cmd.Parameters.AddWithValue("@buttonText", req.ButtonText?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLink", req.ButtonLink?.Trim());
-            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
-            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
+            cmd.Parameters.AddWithValue("@buttonTextVideo", req.ButtonTextVideo?.Trim());
+            cmd.Parameters.AddWithValue("@buttonLinkVideo", req.ButtonLinkVideo?.Trim());
+            cmd.Parameters.AddWithValue("@buttonTextWanted", req.ButtonTextWanted?.Trim());
+            cmd.Parameters.AddWithValue("@buttonLinkWanted", req.ButtonLinkWanted?.Trim());
             cmd.Parameters.AddWithValue("@id", id);
 
             var rows = await cmd.ExecuteNonQueryAsync();
