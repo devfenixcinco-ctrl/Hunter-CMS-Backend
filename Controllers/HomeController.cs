@@ -5,7 +5,6 @@ using MySqlConnector;
 using System.Text.Json;
 
 namespace MreHunter.Api.Controllers
-//Prueba de comentario
 {
     [ApiController]
     [Route("api/home")]
