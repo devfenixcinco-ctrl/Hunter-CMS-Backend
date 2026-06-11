@@ -74,52 +74,7 @@ namespace MreHunter.Api.Controllers
             return Ok(items);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            using var conn = _db.GetConnection();
-            await conn.OpenAsync();
-
-            var sql = @"
-                SELECT 
-                    id,
-                    title,
-                    price,
-                    description,
-                    icon,
-                    buttonTextVideo,
-                    buttonLinkVideo,
-                    buttonTextWanted,
-                    buttonLinkWanted,
-                    created_at
-                FROM payment_methods
-                WHERE id = @id;
-            ";
-
-            using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@id", id);
-
-            using var reader = await cmd.ExecuteReaderAsync();
-
-            if (!await reader.ReadAsync())
-                return NotFound(new { message = "Método de pago no encontrado." });
-
-            var item = new PaymentMethod
-            {
-                Id = reader.GetInt32("id"),
-                Title = reader["title"]?.ToString(),
-                Price = reader["price"]?.ToString(),
-                Description = reader["description"]?.ToString(),
-                Icon = reader["icon"]?.ToString(),
-                ButtonTextVideo = reader["buttonTextVideo"]?.ToString(),
-                ButtonLinkVideo = reader["buttonLinkVideo"]?.ToString(),
-                ButtonTextWanted = reader["buttonTextWanted"]?.ToString(),
-                ButtonLinkWanted = reader["buttonLinkWanted"]?.ToString(),
-                CreatedAt = reader.GetDateTime("created_at")
-            };
-
-            return Ok(item);
-        }
+    
 
         [Authorize]
         [HttpPost]
