@@ -5,7 +5,7 @@ namespace MreHunter.Api.Models
     public class AboutUsRequest
     {
         [Required]
-        [MaxLength(200)]
+        [MaxLength(5000)]
         public string? HeroTitle { get; set; }
 
         [Required]
