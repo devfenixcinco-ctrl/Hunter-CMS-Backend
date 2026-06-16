@@ -151,6 +151,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GpsSectionService>();
 builder.Services.AddScoped<PlanPlusSectionService>();
 builder.Services.AddScoped<PlanPlusBenefitService>();
+builder.Services.AddScoped<ProductsPetsBenefitService>();
+builder.Services.AddScoped<ProductsPetsMediaSectionService>();
 
 
 var app = builder.Build();

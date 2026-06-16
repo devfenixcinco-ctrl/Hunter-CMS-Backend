@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace MreHunter.Api.Models
 {
     public class ProductsPets
@@ -6,6 +8,8 @@ namespace MreHunter.Api.Models
 
         public string? HeroTitle { get; set; }
         public string? HeroDescription { get; set; }
+
+        public IFormFile? HeroImage { get; set; }
         public string? HeroImageUrl { get; set; }
 
         public string? BenefitsTitle { get; set; }
