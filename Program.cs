@@ -150,6 +150,7 @@ builder.Services.AddScoped<DashcamBenefitsService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GpsSectionService>();
 builder.Services.AddScoped<PlanPlusSectionService>();
+builder.Services.AddScoped<PlanPlusBenefitService>();
 
 
 var app = builder.Build();
