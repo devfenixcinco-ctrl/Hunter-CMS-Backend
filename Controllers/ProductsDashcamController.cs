@@ -30,13 +30,6 @@ namespace MreHunter.Api.Controllers
             return result == null ? null : Convert.ToInt32(result);
         }
 
-        private async Task<string?> GetCurrentHeroImageUrl(MySqlConnection conn)
-        {
-            using var cmd = new MySqlCommand("SELECT hero_image_url FROM products_dashcam ORDER BY id DESC LIMIT 1;", conn);
-            var result = await cmd.ExecuteScalarAsync();
-            return result == null || result == DBNull.Value ? null : result.ToString();
-        }
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -79,24 +72,10 @@ namespace MreHunter.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (_service.IsInvalidString(req.HeroTitle) ||
-                _service.IsInvalidString(req.HeroHighlightText) ||
-                _service.IsInvalidString(req.HeroSubtitle) ||
-                _service.IsInvalidString(req.BenefitsTitle) ||
-                _service.IsInvalidString(req.ReasonTitle) ||
-                _service.IsInvalidString(req.ReasonDescription) ||
-                _service.IsInvalidString(req.PaymentTitle))
-            {
-                return BadRequest(new { message = "Los campos de texto obligatorios no pueden estar vacíos" });
-            }
-
             string? heroImageUrl = req.HeroImageUrl;
 
             if (req.HeroImage != null)
                 heroImageUrl = await _service.SaveImageAsync(req.HeroImage, "productsdashcam");
-
-            if (_service.IsInvalidString(heroImageUrl))
-                return BadRequest(new { message = "La imagen es obligatoria. Envía HeroImage o HeroImageUrl" });
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
@@ -200,17 +179,6 @@ namespace MreHunter.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (_service.IsInvalidString(req.HeroTitle) ||
-                _service.IsInvalidString(req.HeroHighlightText) ||
-                _service.IsInvalidString(req.HeroSubtitle) ||
-                _service.IsInvalidString(req.BenefitsTitle) ||
-                _service.IsInvalidString(req.ReasonTitle) ||
-                _service.IsInvalidString(req.ReasonDescription) ||
-                _service.IsInvalidString(req.PaymentTitle))
-            {
-                return BadRequest(new { message = "Los campos de texto obligatorios no pueden estar vacíos" });
-            }
-
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
@@ -222,11 +190,6 @@ namespace MreHunter.Api.Controllers
 
             if (req.HeroImage != null)
                 heroImageUrl = await _service.SaveImageAsync(req.HeroImage, "productsdashcam");
-            else if (_service.IsInvalidString(heroImageUrl))
-                heroImageUrl = await GetCurrentHeroImageUrl(conn);
-
-            if (_service.IsInvalidString(heroImageUrl))
-                return BadRequest(new { message = "La imagen es obligatoria" });
 
             const string sql = @"UPDATE products_dashcam
                                  SET hero_image_url=@heroImageUrl,
