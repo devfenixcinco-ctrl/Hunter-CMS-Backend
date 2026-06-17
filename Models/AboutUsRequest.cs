@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace MreHunter.Api.Models
 {
@@ -56,8 +57,14 @@ namespace MreHunter.Api.Models
         public string? BenefitsSubtitle { get; set; }
 
         [Required]
-        [MinLength(1, ErrorMessage = "Debe enviar al menos un beneficio.")]
-        public List<BenefitItem>? BenefitsItems { get; set; }
+        public string? BenefitsItemsJson { get; set; }
+
+        // Propiedad ignorada del binding pero útil
+        [System.Text.Json.Serialization.JsonIgnore]
+        public List<BenefitItem>? BenefitsItems => 
+            string.IsNullOrEmpty(BenefitsItemsJson) 
+                ? null 
+                : JsonSerializer.Deserialize<List<BenefitItem>>(BenefitsItemsJson);
 
         [Required]
         [MaxLength(200)]
