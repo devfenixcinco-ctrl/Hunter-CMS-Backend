@@ -51,6 +51,11 @@ namespace MreHunter.Api.Controllers
                 id = reader.GetInt32("id"),
                 supportLine = ReadNullableString(reader, "support_line"),
                 theftNumber = ReadNullableString(reader, "theft_number"),
+                lunes = ReadNullableString(reader, "lunes"),
+                martes = ReadNullableString(reader, "martes"),
+                miercoles = ReadNullableString(reader, "miercoles"),
+                jueves = ReadNullableString(reader, "jueves"),
+                viernes = ReadNullableString(reader, "viernes"),
                 createdAt = reader.GetDateTime("created_at")
             });
         }
@@ -82,12 +87,22 @@ namespace MreHunter.Api.Controllers
             {
                 const string updateSql = @"UPDATE header
                                            SET support_line=@support_line,
-                                               theft_number=@theft_number
+                                               theft_number=@theft_number,
+                                               lunes=@lunes,
+                                               martes=@martes,
+                                               miercoles=@miercoles,
+                                               jueves=@jueves,
+                                               viernes=@viernes
                                            WHERE id=@id;";
 
                 using var cmd = new MySqlCommand(updateSql, conn);
                 cmd.Parameters.AddWithValue("@support_line", NormalizeValue(req.SupportLine));
                 cmd.Parameters.AddWithValue("@theft_number", NormalizeValue(req.TheftNumber));
+                cmd.Parameters.AddWithValue("@lunes", NormalizeValue(req.Lunes));
+                cmd.Parameters.AddWithValue("@martes", NormalizeValue(req.Martes));
+                cmd.Parameters.AddWithValue("@miercoles", NormalizeValue(req.Miercoles));
+                cmd.Parameters.AddWithValue("@jueves", NormalizeValue(req.Jueves));
+                cmd.Parameters.AddWithValue("@viernes", NormalizeValue(req.Viernes));
                 cmd.Parameters.AddWithValue("@id", existingId.Value);
 
                 var rows = await cmd.ExecuteNonQueryAsync();
@@ -103,13 +118,36 @@ namespace MreHunter.Api.Controllers
                 });
             }
 
-            const string insertSql = @"INSERT INTO header (support_line, theft_number)
-                                       VALUES (@support_line, @theft_number);
+            const string insertSql = @"INSERT INTO header
+                                       (
+                                           support_line,
+                                           theft_number,
+                                           lunes,
+                                           martes,
+                                           miercoles,
+                                           jueves,
+                                           viernes
+                                       )
+                                       VALUES
+                                       (
+                                           @support_line,
+                                           @theft_number,
+                                           @lunes,
+                                           @martes,
+                                           @miercoles,
+                                           @jueves,
+                                           @viernes
+                                       );
                                        SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
             insertCmd.Parameters.AddWithValue("@support_line", NormalizeValue(req.SupportLine));
             insertCmd.Parameters.AddWithValue("@theft_number", NormalizeValue(req.TheftNumber));
+            insertCmd.Parameters.AddWithValue("@lunes", NormalizeValue(req.Lunes));
+            insertCmd.Parameters.AddWithValue("@martes", NormalizeValue(req.Martes));
+            insertCmd.Parameters.AddWithValue("@miercoles", NormalizeValue(req.Miercoles));
+            insertCmd.Parameters.AddWithValue("@jueves", NormalizeValue(req.Jueves));
+            insertCmd.Parameters.AddWithValue("@viernes", NormalizeValue(req.Viernes));
 
             int newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
@@ -148,12 +186,22 @@ namespace MreHunter.Api.Controllers
 
             const string sql = @"UPDATE header
                                  SET support_line=@support_line,
-                                     theft_number=@theft_number
+                                     theft_number=@theft_number,
+                                     lunes=@lunes,
+                                     martes=@martes,
+                                     miercoles=@miercoles,
+                                     jueves=@jueves,
+                                     viernes=@viernes
                                  WHERE id=@id;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@support_line", NormalizeValue(req.SupportLine));
             cmd.Parameters.AddWithValue("@theft_number", NormalizeValue(req.TheftNumber));
+            cmd.Parameters.AddWithValue("@lunes", NormalizeValue(req.Lunes));
+            cmd.Parameters.AddWithValue("@martes", NormalizeValue(req.Martes));
+            cmd.Parameters.AddWithValue("@miercoles", NormalizeValue(req.Miercoles));
+            cmd.Parameters.AddWithValue("@jueves", NormalizeValue(req.Jueves));
+            cmd.Parameters.AddWithValue("@viernes", NormalizeValue(req.Viernes));
             cmd.Parameters.AddWithValue("@id", latestId.Value);
 
             var rows = await cmd.ExecuteNonQueryAsync();
