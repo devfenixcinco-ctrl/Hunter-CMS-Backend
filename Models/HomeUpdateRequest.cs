@@ -33,5 +33,7 @@ namespace MreHunter.Api.Models
       
         public string? FourthBannerTitle { get; set; }
         public string? FourthBannerText { get; set; }
+
+        public string? BannerButtonURL { get; set; }
     }
 }

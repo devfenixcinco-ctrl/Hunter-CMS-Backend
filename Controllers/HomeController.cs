@@ -60,7 +60,9 @@ namespace MreHunter.Api.Controllers
 
                 BannerTitle = ReadNullableString(reader, "banner_title"),
                 BannerText = ReadNullableString(reader, "banner_text"),
+                BannerButtonURL = ReadNullableString(reader, "banner_button_url"),
                 VideoUrl = ReadNullableString(reader, "videoUrl"),
+
 
                 FirstCardTitle = ReadNullableString(reader, "first_card_title"),
                 FirstCardText = ReadNullableString(reader, "first_card_text"),
@@ -166,6 +168,7 @@ namespace MreHunter.Api.Controllers
                 cmd.Parameters.AddWithValue("@third_banner_text", (object?)req.ThirdBannerText ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@third_banner_highlight", (object?)req.ThirdBannerHighlight ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@third_banner_emphasis", (object?)req.ThirdBannerEmphasis ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@banner_button_url", (object?)req.BannerButtonURL ?? DBNull.Value);
 
                 cmd.Parameters.AddWithValue("@id", id);
 
@@ -179,6 +182,7 @@ namespace MreHunter.Api.Controllers
                 (
                     banner_title,
                     banner_text,
+                    banner_button_url,
                     videoUrl,
                     first_card_title,
                     first_card_text,
@@ -203,6 +207,7 @@ namespace MreHunter.Api.Controllers
                 (
                     @banner_title,
                     @banner_text,
+                    @banner_button_url,
                     @videoUrl,
                     @first_card_title,
                     @first_card_text,
@@ -259,6 +264,7 @@ namespace MreHunter.Api.Controllers
             insertCmd.Parameters.AddWithValue("@third_banner_text", (object?)req.ThirdBannerText ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@third_banner_highlight", (object?)req.ThirdBannerHighlight ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@third_banner_emphasis", (object?)req.ThirdBannerEmphasis ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@banner_button_url", (object?)req.BannerButtonURL ?? DBNull.Value);    
 
             int newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
@@ -275,6 +281,7 @@ namespace MreHunter.Api.Controllers
                 UPDATE home_info SET
                     banner_title=@banner_title,
                     banner_text=@banner_text,
+                    banner_button_url=@banner_button_url,
                     videoUrl=@videoUrl,
                     first_card_title=@first_card_title,
                     first_card_text=@first_card_text,
@@ -300,6 +307,7 @@ namespace MreHunter.Api.Controllers
 
             cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_button_url", (object?)req.BannerButtonURL ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
 
             cmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);

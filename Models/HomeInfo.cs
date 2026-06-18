@@ -35,5 +35,7 @@ public class HomeInfo
     public string? ThirdBannerHighlight { get; set; }
     public string? ThirdBannerEmphasis { get; set; }
 
+    public string? BannerButtonURL { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }
