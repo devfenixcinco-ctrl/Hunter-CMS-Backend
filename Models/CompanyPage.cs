@@ -4,7 +4,7 @@ namespace MreHunter.Api.Models
 {
     public class CompanyPage
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public string HeroTitle { get; set; } = string.Empty;
         public string? HeroSubtitle { get; set; }
@@ -23,7 +23,7 @@ namespace MreHunter.Api.Models
         public string CtaButton2Text { get; set; } = string.Empty;
         public string? CtaButton2Link { get; set; }
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }
