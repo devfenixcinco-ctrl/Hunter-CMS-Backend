@@ -30,7 +30,6 @@ namespace MreHunter.Api.Services
                 {
                     Id = reader.GetInt32("id"),
                     Title = reader["title"]?.ToString(),
-                    Description = reader["description"]?.ToString(),
                     Icon = reader["icon"]?.ToString()
                 });
             }
@@ -46,12 +45,10 @@ namespace MreHunter.Api.Services
             var query = @"
                 INSERT INTO plan_plus_benefits (
                     title,
-                    description,
                     icon
                 )
                 VALUES (
                     @title,
-                    @description,
                     @icon
                 );
 
@@ -61,7 +58,6 @@ namespace MreHunter.Api.Services
             using var cmd = new MySqlCommand(query, conn);
 
             cmd.Parameters.AddWithValue("@title", request.Title);
-            cmd.Parameters.AddWithValue("@description", request.Description);
             cmd.Parameters.AddWithValue("@icon", request.Icon);
 
             var result = await cmd.ExecuteScalarAsync();
@@ -69,7 +65,8 @@ namespace MreHunter.Api.Services
             return Convert.ToInt32(result);
         }
 
-        public async Task<bool> UpdateAsync(int id, PlanPlusBenefit request)
+
+      public async Task<bool> UpdateAsync(int id, PlanPlusBenefit request)
         {
             using var conn = new MySqlConnection(_connectionString);
             await conn.OpenAsync();
@@ -77,7 +74,6 @@ namespace MreHunter.Api.Services
             var query = @"
                 UPDATE plan_plus_benefits SET
                     title = @title,
-                    description = @description,
                     icon = @icon
                 WHERE id = @id;
             ";
@@ -86,7 +82,6 @@ namespace MreHunter.Api.Services
 
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@title", request.Title);
-            cmd.Parameters.AddWithValue("@description", request.Description);
             cmd.Parameters.AddWithValue("@icon", request.Icon);
 
             var rows = await cmd.ExecuteNonQueryAsync();
