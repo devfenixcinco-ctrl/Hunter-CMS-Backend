@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MreHunter.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aca892493049a58ef2c1413ac274751e68c2bec8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e452205897dd2f56af5c3024c91deff2743aaaa")]
 [assembly: System.Reflection.AssemblyProductAttribute("MreHunter.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MreHunter.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

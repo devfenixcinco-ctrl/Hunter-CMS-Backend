@@ -215,7 +215,7 @@ namespace MreHunter.Api.Controllers
                 id = latestId.Value
             });
         }
-
+    
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> Delete()

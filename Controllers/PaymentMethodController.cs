@@ -18,14 +18,11 @@ namespace MreHunter.Api.Controllers
             _db = db;
         }
 
-      private bool HasInvalidRequiredFields(PaymentMethodRequest req)
-        {
-            return string.IsNullOrWhiteSpace(req.Title) ||
-                string.IsNullOrWhiteSpace(req.Price) ||
-                string.IsNullOrWhiteSpace(req.Description) ||
-                string.IsNullOrWhiteSpace(req.Icon);
-        }
-                
+        private static string? ReadNullableString(MySqlDataReader reader, string column)
+            => reader[column] == DBNull.Value ? null : reader[column].ToString();
+
+        private static object NormalizeValue(string? value)
+            => string.IsNullOrWhiteSpace(value) ? DBNull.Value : value.Trim();
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -59,22 +56,20 @@ namespace MreHunter.Api.Controllers
                 items.Add(new PaymentMethod
                 {
                     Id = reader.GetInt32("id"),
-                    Title = reader["title"]?.ToString(),
-                    Price = reader["price"]?.ToString(),
-                    Description = reader["description"]?.ToString(),
-                    Icon = reader["icon"]?.ToString(),
-                    ButtonTextVideo = reader["buttonTextVideo"]?.ToString(),
-                    ButtonLinkVideo = reader["buttonLinkVideo"]?.ToString(),
-                    ButtonTextWanted = reader["buttonTextWanted"]?.ToString(),
-                    ButtonLinkWanted = reader["buttonLinkWanted"]?.ToString(),
+                    Title = ReadNullableString(reader, "title"),
+                    Price = ReadNullableString(reader, "price"),
+                    Description = ReadNullableString(reader, "description"),
+                    Icon = ReadNullableString(reader, "icon"),
+                    ButtonTextVideo = ReadNullableString(reader, "buttonTextVideo"),
+                    ButtonLinkVideo = ReadNullableString(reader, "buttonLinkVideo"),
+                    ButtonTextWanted = ReadNullableString(reader, "buttonTextWanted"),
+                    ButtonLinkWanted = ReadNullableString(reader, "buttonLinkWanted"),
                     CreatedAt = reader.GetDateTime("created_at")
                 });
             }
 
             return Ok(items);
         }
-
-    
 
         [Authorize]
         [HttpPost]
@@ -85,14 +80,6 @@ namespace MreHunter.Api.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-            if (HasInvalidRequiredFields(req))
-            {
-                return BadRequest(new
-                {
-                    message = "Title, Price, Description, Icon, ButtonTextVideo, ButtonLinkVideo, ButtonTextWanted y ButtonLinkWanted son obligatorios."
-                });
-            }
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
@@ -125,14 +112,14 @@ namespace MreHunter.Api.Controllers
 
             using var cmd = new MySqlCommand(sql, conn);
 
-            cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
-            cmd.Parameters.AddWithValue("@price", req.Price?.Trim());
-            cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
-            cmd.Parameters.AddWithValue("@icon", req.Icon?.Trim());
-            cmd.Parameters.AddWithValue("@buttonTextVideo", req.ButtonTextVideo?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLinkVideo", req.ButtonLinkVideo?.Trim());
-            cmd.Parameters.AddWithValue("@buttonTextWanted", req.ButtonTextWanted?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLinkWanted", req.ButtonLinkWanted?.Trim());
+            cmd.Parameters.AddWithValue("@title", NormalizeValue(req.Title));
+            cmd.Parameters.AddWithValue("@price", NormalizeValue(req.Price));
+            cmd.Parameters.AddWithValue("@description", NormalizeValue(req.Description));
+            cmd.Parameters.AddWithValue("@icon", NormalizeValue(req.Icon));
+            cmd.Parameters.AddWithValue("@buttonTextVideo", NormalizeValue(req.ButtonTextVideo));
+            cmd.Parameters.AddWithValue("@buttonLinkVideo", NormalizeValue(req.ButtonLinkVideo));
+            cmd.Parameters.AddWithValue("@buttonTextWanted", NormalizeValue(req.ButtonTextWanted));
+            cmd.Parameters.AddWithValue("@buttonLinkWanted", NormalizeValue(req.ButtonLinkWanted));
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -153,14 +140,6 @@ namespace MreHunter.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (HasInvalidRequiredFields(req))
-            {
-                return BadRequest(new
-                {
-                    message = "Title, Price, Description, Icon, ButtonTextVideo, ButtonLinkVideo, ButtonTextWanted y ButtonLinkWanted son obligatorios."
-                });
-            }
-
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
@@ -180,14 +159,14 @@ namespace MreHunter.Api.Controllers
 
             using var cmd = new MySqlCommand(sql, conn);
 
-            cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
-            cmd.Parameters.AddWithValue("@price", req.Price?.Trim());
-            cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
-            cmd.Parameters.AddWithValue("@icon", req.Icon?.Trim());
-            cmd.Parameters.AddWithValue("@buttonTextVideo", req.ButtonTextVideo?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLinkVideo", req.ButtonLinkVideo?.Trim());
-            cmd.Parameters.AddWithValue("@buttonTextWanted", req.ButtonTextWanted?.Trim());
-            cmd.Parameters.AddWithValue("@buttonLinkWanted", req.ButtonLinkWanted?.Trim());
+            cmd.Parameters.AddWithValue("@title", NormalizeValue(req.Title));
+            cmd.Parameters.AddWithValue("@price", NormalizeValue(req.Price));
+            cmd.Parameters.AddWithValue("@description", NormalizeValue(req.Description));
+            cmd.Parameters.AddWithValue("@icon", NormalizeValue(req.Icon));
+            cmd.Parameters.AddWithValue("@buttonTextVideo", NormalizeValue(req.ButtonTextVideo));
+            cmd.Parameters.AddWithValue("@buttonLinkVideo", NormalizeValue(req.ButtonLinkVideo));
+            cmd.Parameters.AddWithValue("@buttonTextWanted", NormalizeValue(req.ButtonTextWanted));
+            cmd.Parameters.AddWithValue("@buttonLinkWanted", NormalizeValue(req.ButtonLinkWanted));
             cmd.Parameters.AddWithValue("@id", id);
 
             var rows = await cmd.ExecuteNonQueryAsync();
