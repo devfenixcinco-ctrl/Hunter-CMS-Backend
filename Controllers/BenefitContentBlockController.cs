@@ -18,12 +18,14 @@ namespace MreHunter.Api.Controllers
             _db = db;
         }
 
+        private static string? ReadNullableString(MySqlDataReader reader, string column)
+            => reader[column] == DBNull.Value ? null : reader[column].ToString();
+
         private bool HasInvalidRequiredFields(BenefitContentBlockRequest req)
         {
             return string.IsNullOrWhiteSpace(req.Title) ||
                    string.IsNullOrWhiteSpace(req.Description) ||
                    string.IsNullOrWhiteSpace(req.MediaUrl);
-        
         }
 
         [HttpGet]
@@ -46,9 +48,13 @@ namespace MreHunter.Api.Controllers
                 items.Add(new BenefitContentBlock
                 {
                     Id = reader.GetInt32("id"),
-                    Title = reader.GetString("title"),
-                    Description = reader["description"]?.ToString(),
-                    MediaUrl = reader["media_url"]?.ToString(),
+                    Title = ReadNullableString(reader, "title"),
+                    Description = ReadNullableString(reader, "description"),
+                    MediaUrl = ReadNullableString(reader, "media_url"),
+                    MediaType = ReadNullableString(reader, "media_type"),
+                    TextPosition = ReadNullableString(reader, "text_position"),
+                    DisplayOrder = reader["display_order"] == DBNull.Value ? 0 : Convert.ToInt32(reader["display_order"]),
+                    IsActive = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]),
                     CreatedAt = reader.GetDateTime("created_at")
                 });
             }
@@ -77,9 +83,13 @@ namespace MreHunter.Api.Controllers
             var item = new BenefitContentBlock
             {
                 Id = reader.GetInt32("id"),
-                Title = reader.GetString("title"),
-                Description = reader["description"]?.ToString(),
-                MediaUrl = reader["media_url"]?.ToString(),
+                Title = ReadNullableString(reader, "title"),
+                Description = ReadNullableString(reader, "description"),
+                MediaUrl = ReadNullableString(reader, "media_url"),
+                MediaType = ReadNullableString(reader, "media_type"),
+                TextPosition = ReadNullableString(reader, "text_position"),
+                DisplayOrder = reader["display_order"] == DBNull.Value ? 0 : Convert.ToInt32(reader["display_order"]),
+                IsActive = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]),
                 CreatedAt = reader.GetDateTime("created_at")
             };
 
@@ -100,7 +110,7 @@ namespace MreHunter.Api.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Title, Description, MediaUrl, MediaType, TextPosition son obligatorios y DisplayOrder debe ser mayor a 0."
+                    message = "Title, Description y MediaUrl son obligatorios."
                 });
             }
 
@@ -117,7 +127,10 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@mediaUrl", req.MediaUrl?.Trim());
-    
+            cmd.Parameters.AddWithValue("@mediaType", (object?)req.MediaType ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@textPosition", (object?)req.TextPosition ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
+            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
 
             var newId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
 
@@ -142,7 +155,7 @@ namespace MreHunter.Api.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Title, Description, MediaUrl, MediaType, TextPosition son obligatorios y DisplayOrder debe ser mayor a 0."
+                    message = "Title, Description y MediaUrl son obligatorios."
                 });
             }
 
@@ -163,7 +176,10 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
             cmd.Parameters.AddWithValue("@mediaUrl", req.MediaUrl?.Trim());
-            
+            cmd.Parameters.AddWithValue("@mediaType", (object?)req.MediaType ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@textPosition", (object?)req.TextPosition ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@displayOrder", req.DisplayOrder);
+            cmd.Parameters.AddWithValue("@isActive", req.IsActive);
             cmd.Parameters.AddWithValue("@id", id);
 
             var rows = await cmd.ExecuteNonQueryAsync();

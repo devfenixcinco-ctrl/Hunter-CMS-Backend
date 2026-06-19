@@ -4,7 +4,7 @@ namespace MreHunter.Api.Models
 {
     public class ProductsPets
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public string? HeroTitle { get; set; }
         public string? HeroDescription { get; set; }
@@ -17,7 +17,7 @@ namespace MreHunter.Api.Models
         public string? CardTitle { get; set; }
         public string? CardText { get; set; }
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

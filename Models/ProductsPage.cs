@@ -4,7 +4,7 @@ namespace MreHunter.Api.Models
 {
     public class ProductsPage
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public string HeroTitle { get; set; } = string.Empty;
         public string HeroButtonText { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ namespace MreHunter.Api.Models
         public IFormFile? CoverageImage { get; set; }
         public string? CoverageImageUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

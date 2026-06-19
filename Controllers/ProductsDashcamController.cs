@@ -226,11 +226,15 @@ namespace MreHunter.Api.Controllers
             if (rows == 0)
                 return NotFound(new { message = "No se pudo actualizar ProductsDashcam" });
 
+            var fullHeroImageUrl = !string.IsNullOrEmpty(heroImageUrl)
+                ? $"{Request.Scheme}://{Request.Host}{heroImageUrl}"
+                : null;
+
             return Ok(new
             {
                 message = "ProductsDashcam actualizado (PUT)",
                 id = latestId.Value,
-                heroImageUrl
+                heroImageUrl = fullHeroImageUrl
             });
         }
 

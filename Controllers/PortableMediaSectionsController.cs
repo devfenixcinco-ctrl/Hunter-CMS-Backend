@@ -37,17 +37,33 @@ namespace MreHunter.Api.Controllers
 
         [Authorize]
         [HttpPost]
-       
         public async Task<IActionResult> Create([FromBody] PortableMediaSectionRequest req)
         {
             var id = await _service.CreateAsync(req, Request.Scheme, Request.Host.ToString());
-            return Ok(new { message = "Media section creada correctamente.", id });
+
+            return Ok(new
+            {
+                message = "Media section creada correctamente.",
+                id
+            });
         }
 
         [Authorize]
         [HttpPut("{id}")]
-        
-    
+        public async Task<IActionResult> Update(int id, [FromBody] PortableMediaSectionRequest req)
+        {
+            var updated = await _service.UpdateAsync(id, req);
+
+            if (!updated)
+                return NotFound(new { message = "Media section no encontrada." });
+
+            return Ok(new
+            {
+                message = "Media section actualizada correctamente.",
+                id
+            });
+        }
+
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -57,7 +73,10 @@ namespace MreHunter.Api.Controllers
             if (!deleted)
                 return NotFound(new { message = "Media section no encontrada." });
 
-            return Ok(new { message = "Media section eliminada correctamente." });
+            return Ok(new
+            {
+                message = "Media section eliminada correctamente."
+            });
         }
     }
 }
