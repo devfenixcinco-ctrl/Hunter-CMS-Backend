@@ -56,6 +56,7 @@ namespace MreHunter.Api.Models
         [MaxLength(300)]
         public string? BenefitsSubtitle { get; set; }
 
+        public List<BenefitItem>? Benefits { get; set; }
 
         [Required]
         [MaxLength(200)]
