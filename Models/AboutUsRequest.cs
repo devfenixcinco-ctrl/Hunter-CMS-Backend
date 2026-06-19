@@ -56,15 +56,6 @@ namespace MreHunter.Api.Models
         [MaxLength(300)]
         public string? BenefitsSubtitle { get; set; }
 
-        [Required]
-        public string? BenefitsItemsJson { get; set; }
-
-        // Propiedad ignorada del binding pero útil
-        [System.Text.Json.Serialization.JsonIgnore]
-        public List<BenefitItem>? BenefitsItems => 
-            string.IsNullOrEmpty(BenefitsItemsJson) 
-                ? null 
-                : JsonSerializer.Deserialize<List<BenefitItem>>(BenefitsItemsJson);
 
         [Required]
         [MaxLength(200)]

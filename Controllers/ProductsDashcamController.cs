@@ -230,11 +230,11 @@ namespace MreHunter.Api.Controllers
                 ? $"{Request.Scheme}://{Request.Host}{heroImageUrl}"
                 : null;
 
-            return Ok(new
+           return Ok(new
             {
                 message = "ProductsDashcam actualizado (PUT)",
                 id = latestId.Value,
-                heroImageUrl = fullHeroImageUrl
+                heroImageUrl
             });
         }
 

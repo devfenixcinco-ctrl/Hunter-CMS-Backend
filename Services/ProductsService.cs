@@ -122,82 +122,165 @@ namespace MreHunter.Api.Services
             };
         }
 
-     public async Task<int> CreateProductsPageAsync(ProductsPage request, string scheme, string host)
+    public async Task<int> CreateProductsPageAsync(ProductsPage request, string scheme, string host)
+    {
+        var connectionString = GetConnectionString();
+
+        using var connection = new MySqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        string? heroImageUrl = request.HeroImageUrl;
+        string? coverageImageUrl = request.CoverageImageUrl;
+
+        if (request.HeroImage != null)
         {
-            var connectionString = GetConnectionString();
-
-            using var connection = new MySqlConnection(connectionString);
-            await connection.OpenAsync();
-
-            var query = @"INSERT INTO products_page
-                          (hero_title, hero_button_text, hero_button_link, hero_image_url,
-                           help_title, help_subtitle, offices_title,
-                           coverage_title, coverage_subtitle, coverage_button_text,
-                           coverage_button_link, coverage_image_url)
-                          VALUES
-                          (@HeroTitle, @HeroButtonText, @HeroButtonLink, @HeroImageUrl,
-                           @HelpTitle, @HelpSubtitle, @OfficesTitle,
-                           @CoverageTitle, @CoverageSubtitle, @CoverageButtonText,
-                           @CoverageButtonLink, @CoverageImageUrl);
-                          SELECT LAST_INSERT_ID();";
-
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@HeroTitle", request.HeroTitle);
-            command.Parameters.AddWithValue("@HeroButtonText", request.HeroButtonText);
-            command.Parameters.AddWithValue("@HeroButtonLink", (object?)request.HeroButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@HeroImageUrl", (object?)request.HeroImageUrl ?? DBNull.Value);
-            command.Parameters.AddWithValue("@HelpTitle", request.HelpTitle);
-            command.Parameters.AddWithValue("@HelpSubtitle", (object?)request.HelpSubtitle ?? DBNull.Value);
-            command.Parameters.AddWithValue("@OfficesTitle", request.OfficesTitle);
-            command.Parameters.AddWithValue("@CoverageTitle", request.CoverageTitle);
-            command.Parameters.AddWithValue("@CoverageSubtitle", (object?)request.CoverageSubtitle ?? DBNull.Value);
-            command.Parameters.AddWithValue("@CoverageButtonText", request.CoverageButtonText);
-            command.Parameters.AddWithValue("@CoverageButtonLink", (object?)request.CoverageButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@CoverageImageUrl", (object?)request.CoverageImageUrl ?? DBNull.Value);
-
-            var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            heroImageUrl = await SaveImage(
+                request.HeroImage,
+                "sedes",
+                "hero_image",
+                scheme,
+                host
+            );
         }
 
-        public async Task<bool> UpdateProductsPageAsync(int id, ProductsPage request, string scheme, string host)
+        if (request.CoverageImage != null)
         {
-            var connectionString = GetConnectionString();
+            coverageImageUrl = await SaveImage(
+                request.CoverageImage,
+                "sedes",
+                "coverage_image",
+                scheme,
+                host
+            );
+        }
 
-            using var connection = new MySqlConnection(connectionString);
-            await connection.OpenAsync();
+        var query = @"INSERT INTO products_page
+                    (hero_title, hero_button_text, hero_button_link, hero_image_url,
+                    help_title, help_subtitle, offices_title,
+                    coverage_title, coverage_subtitle, coverage_button_text,
+                    coverage_button_link, coverage_image_url)
+                    VALUES
+                    (@HeroTitle, @HeroButtonText, @HeroButtonLink, @HeroImageUrl,
+                    @HelpTitle, @HelpSubtitle, @OfficesTitle,
+                    @CoverageTitle, @CoverageSubtitle, @CoverageButtonText,
+                    @CoverageButtonLink, @CoverageImageUrl);
 
-            var query = @"UPDATE products_page SET
-                            hero_title = @HeroTitle,
-                            hero_button_text = @HeroButtonText,
-                            hero_button_link = @HeroButtonLink,
-                            hero_image_url = @HeroImageUrl,
-                            help_title = @HelpTitle,
-                            help_subtitle = @HelpSubtitle,
-                            offices_title = @OfficesTitle,
-                            coverage_title = @CoverageTitle,
-                            coverage_subtitle = @CoverageSubtitle,
-                            coverage_button_text = @CoverageButtonText,
-                            coverage_button_link = @CoverageButtonLink,
-                            coverage_image_url = @CoverageImageUrl
-                          WHERE id = @Id;";
+                    SELECT LAST_INSERT_ID();";
 
-            using var command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Id", id);
-            command.Parameters.AddWithValue("@HeroTitle", request.HeroTitle);
-            command.Parameters.AddWithValue("@HeroButtonText", request.HeroButtonText);
-            command.Parameters.AddWithValue("@HeroButtonLink", (object?)request.HeroButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@HeroImageUrl", (object?)request.HeroImageUrl ?? DBNull.Value);
-            command.Parameters.AddWithValue("@HelpTitle", request.HelpTitle);
-            command.Parameters.AddWithValue("@HelpSubtitle", (object?)request.HelpSubtitle ?? DBNull.Value);
-            command.Parameters.AddWithValue("@OfficesTitle", request.OfficesTitle);
-            command.Parameters.AddWithValue("@CoverageTitle", request.CoverageTitle);
-            command.Parameters.AddWithValue("@CoverageSubtitle", (object?)request.CoverageSubtitle ?? DBNull.Value);
-            command.Parameters.AddWithValue("@CoverageButtonText", request.CoverageButtonText);
-            command.Parameters.AddWithValue("@CoverageButtonLink", (object?)request.CoverageButtonLink ?? DBNull.Value);
-            command.Parameters.AddWithValue("@CoverageImageUrl", (object?)request.CoverageImageUrl ?? DBNull.Value);
+        using var command = new MySqlCommand(query, connection);
 
-            var rows = await command.ExecuteNonQueryAsync();
-            return rows > 0;
+        command.Parameters.AddWithValue("@HeroTitle", request.HeroTitle);
+        command.Parameters.AddWithValue("@HeroButtonText", request.HeroButtonText);
+        command.Parameters.AddWithValue("@HeroButtonLink", (object?)request.HeroButtonLink ?? DBNull.Value);
+        command.Parameters.AddWithValue("@HeroImageUrl", (object?)heroImageUrl ?? DBNull.Value);
+
+        command.Parameters.AddWithValue("@HelpTitle", request.HelpTitle);
+        command.Parameters.AddWithValue("@HelpSubtitle", (object?)request.HelpSubtitle ?? DBNull.Value);
+        command.Parameters.AddWithValue("@OfficesTitle", request.OfficesTitle);
+
+        command.Parameters.AddWithValue("@CoverageTitle", request.CoverageTitle);
+        command.Parameters.AddWithValue("@CoverageSubtitle", (object?)request.CoverageSubtitle ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CoverageButtonText", request.CoverageButtonText);
+        command.Parameters.AddWithValue("@CoverageButtonLink", (object?)request.CoverageButtonLink ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CoverageImageUrl", (object?)coverageImageUrl ?? DBNull.Value);
+
+        var result = await command.ExecuteScalarAsync();
+
+        return Convert.ToInt32(result);
+    }
+
+    public async Task<bool> UpdateProductsPageAsync(int id, ProductsPage request, string scheme, string host)
+    {
+        var connectionString = GetConnectionString();
+
+        using var connection = new MySqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        string? heroImageUrl = request.HeroImageUrl;
+        string? coverageImageUrl = request.CoverageImageUrl;
+
+        using (var currentCommand = new MySqlCommand(
+            "SELECT hero_image_url, coverage_image_url FROM products_page WHERE id = @Id LIMIT 1;",
+            connection))
+        {
+            currentCommand.Parameters.AddWithValue("@Id", id);
+
+            using var reader = await currentCommand.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                if (string.IsNullOrEmpty(heroImageUrl))
+                {
+                    heroImageUrl = reader.IsDBNull(reader.GetOrdinal("hero_image_url"))
+                        ? null
+                        : reader.GetString("hero_image_url");
+                }
+
+                if (string.IsNullOrEmpty(coverageImageUrl))
+                {
+                    coverageImageUrl = reader.IsDBNull(reader.GetOrdinal("coverage_image_url"))
+                        ? null
+                        : reader.GetString("coverage_image_url");
+                }
+            }
+        }
+
+        if (request.HeroImage != null)
+        {
+            heroImageUrl = await SaveImage(
+                request.HeroImage,
+                "sedes",
+                "hero_image",
+                scheme,
+                host
+            );
+        }
+
+        if (request.CoverageImage != null)
+        {
+            coverageImageUrl = await SaveImage(
+                request.CoverageImage,
+                "sedes",
+                "coverage_image",
+                scheme,
+                host
+            );
+        }
+
+        var query = @"UPDATE products_page SET
+                        hero_title = @HeroTitle,
+                        hero_button_text = @HeroButtonText,
+                        hero_button_link = @HeroButtonLink,
+                        hero_image_url = @HeroImageUrl,
+                        help_title = @HelpTitle,
+                        help_subtitle = @HelpSubtitle,
+                        offices_title = @OfficesTitle,
+                        coverage_title = @CoverageTitle,
+                        coverage_subtitle = @CoverageSubtitle,
+                        coverage_button_text = @CoverageButtonText,
+                        coverage_button_link = @CoverageButtonLink,
+                        coverage_image_url = @CoverageImageUrl
+                    WHERE id = @Id;";
+
+        using var command = new MySqlCommand(query, connection);
+
+        command.Parameters.AddWithValue("@Id", id);
+        command.Parameters.AddWithValue("@HeroTitle", request.HeroTitle);
+        command.Parameters.AddWithValue("@HeroButtonText", request.HeroButtonText);
+        command.Parameters.AddWithValue("@HeroButtonLink", (object?)request.HeroButtonLink ?? DBNull.Value);
+        command.Parameters.AddWithValue("@HeroImageUrl", (object?)heroImageUrl ?? DBNull.Value);
+        command.Parameters.AddWithValue("@HelpTitle", request.HelpTitle);
+        command.Parameters.AddWithValue("@HelpSubtitle", (object?)request.HelpSubtitle ?? DBNull.Value);
+        command.Parameters.AddWithValue("@OfficesTitle", request.OfficesTitle);
+        command.Parameters.AddWithValue("@CoverageTitle", request.CoverageTitle);
+        command.Parameters.AddWithValue("@CoverageSubtitle", (object?)request.CoverageSubtitle ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CoverageButtonText", request.CoverageButtonText);
+        command.Parameters.AddWithValue("@CoverageButtonLink", (object?)request.CoverageButtonLink ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CoverageImageUrl", (object?)coverageImageUrl ?? DBNull.Value);
+
+        var rows = await command.ExecuteNonQueryAsync();
+
+        return rows > 0;
         }
 
         public async Task<int> CreateHelpCardAsync(ProductHelpCard request)
@@ -339,5 +422,51 @@ namespace MreHunter.Api.Services
             var rows = await command.ExecuteNonQueryAsync();
             return rows > 0;
         }
+
+        private async Task<string> SaveImage(
+            IFormFile file,
+            string folder,
+            string fileNameWithoutExtension,
+            string scheme,
+            string host)
+        {
+            if (file == null || file.Length == 0)
+                throw new Exception("No se recibió ningún archivo.");
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(extension))
+                throw new Exception("Formato no permitido. Solo jpg, jpeg, png y webp.");
+
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "uploads",
+                folder
+            );
+
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            foreach (var ext in allowedExtensions)
+            {
+                var oldFile = Path.Combine(uploadsFolder, fileNameWithoutExtension + ext);
+
+                if (File.Exists(oldFile))
+                    File.Delete(oldFile);
+            }
+
+            var finalFileName = fileNameWithoutExtension + extension;
+            var filePath = Path.Combine(uploadsFolder, finalFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return $"{scheme}://{host}/uploads/{folder}/{finalFileName}";
+        }
     }
 }
+    
