@@ -12,6 +12,7 @@ namespace MreHunter.Api.Models
         [MaxLength(1000)]
         public string? Description { get; set; }
 
-       
+        [MaxLength(255)]
+        public string? BenefitsTitle { get; set; }
     }
 }
