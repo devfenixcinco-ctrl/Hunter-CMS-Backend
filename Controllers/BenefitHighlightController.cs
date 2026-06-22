@@ -8,7 +8,7 @@ namespace MreHunter.Api.Controllers
 {
     [ApiController]
     [Route("api/conventional-highlight")]
-    [Tags("Producto Convencional (Highlight)    ")]
+    [Tags("Producto Convencional (Highlight)")]
     public class BenefitHighlightController : ControllerBase
     {
         private readonly Db _db;
@@ -22,8 +22,10 @@ namespace MreHunter.Api.Controllers
         {
             return string.IsNullOrWhiteSpace(req.Title) ||
                    string.IsNullOrWhiteSpace(req.Description);
-               
         }
+
+        private static string? ReadNullableString(MySqlDataReader reader, string column)
+            => reader[column] == DBNull.Value ? null : reader[column].ToString();
 
         [HttpGet]
         public async Task<IActionResult> Get()
@@ -31,7 +33,7 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            var sql = @"SELECT id, title, description, created_at
+            var sql = @"SELECT id, title, description, benefits_title, created_at
                         FROM benefit_highlight
                         LIMIT 1;";
 
@@ -45,7 +47,8 @@ namespace MreHunter.Api.Controllers
             {
                 Id = reader.GetInt32("id"),
                 Title = reader.GetString("title"),
-                Description = reader["description"]?.ToString(),
+                Description = ReadNullableString(reader, "description"),
+                BenefitsTitle = ReadNullableString(reader, "benefits_title"),
                 CreatedAt = reader.GetDateTime("created_at")
             };
 
@@ -82,12 +85,14 @@ namespace MreHunter.Api.Controllers
 
                 var updateSql = @"UPDATE benefit_highlight
                                   SET title = @title,
-                                      description = @description
+                                      description = @description,
+                                      benefits_title = @benefitsTitle
                                   WHERE id = @id;";
 
                 using var cmd = new MySqlCommand(updateSql, conn);
                 cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
                 cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
+                cmd.Parameters.AddWithValue("@benefitsTitle", (object?)req.BenefitsTitle?.Trim() ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@id", id);
 
                 await cmd.ExecuteNonQueryAsync();
@@ -96,20 +101,21 @@ namespace MreHunter.Api.Controllers
                 {
                     message = "Highlight actualizado",
                     created = false,
-                    id
+                    id,
+                    benefitsTitle = req.BenefitsTitle
                 });
             }
 
             var insertSql = @"INSERT INTO benefit_highlight
-                              (title, description)
+                              (title, description, benefits_title)
                               VALUES
-                              (@title, @description);
+                              (@title, @description, @benefitsTitle);
                               SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
             insertCmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             insertCmd.Parameters.AddWithValue("@description", req.Description?.Trim());
-
+            insertCmd.Parameters.AddWithValue("@benefitsTitle", (object?)req.BenefitsTitle?.Trim() ?? DBNull.Value);
 
             var newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
@@ -117,12 +123,12 @@ namespace MreHunter.Api.Controllers
             {
                 message = "Highlight creado",
                 created = true,
-                id = newId
+                id = newId,
+                benefitsTitle = req.BenefitsTitle
             });
         }
 
         [Authorize]
-        
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromBody] BenefitHighlightRequest req)
         {
@@ -136,7 +142,7 @@ namespace MreHunter.Api.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Title, Description, BackgroundColor y TextColor son obligatorios y no pueden estar vacíos."
+                    message = "Title y Description son obligatorios y no pueden estar vacíos."
                 });
             }
 
@@ -153,17 +159,24 @@ namespace MreHunter.Api.Controllers
 
             var sql = @"UPDATE benefit_highlight
                         SET title = @title,
-                            description = @description
+                            description = @description,
+                            benefits_title = @benefitsTitle
                         WHERE id = @id;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@title", req.Title?.Trim());
             cmd.Parameters.AddWithValue("@description", req.Description?.Trim());
+            cmd.Parameters.AddWithValue("@benefitsTitle", (object?)req.BenefitsTitle?.Trim() ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@id", id);
 
             await cmd.ExecuteNonQueryAsync();
 
-            return Ok(new { message = "Highlight actualizado", id });
+            return Ok(new
+            {
+                message = "Highlight actualizado",
+                id,
+                benefitsTitle = req.BenefitsTitle
+            });
         }
     }
 }
