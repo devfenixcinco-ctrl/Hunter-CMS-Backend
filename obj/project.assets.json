@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net8.0": {
       "BCrypt.Net-Next/4.0.3": {
@@ -2125,19 +2125,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Administrador\\.nuget\\packages\\": {}
+    "C:\\Users\\DesarrolladorJunior1\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Administrador\\Desktop\\MrehunterP\\MreHunter.Api\\MreHunter.Api.csproj",
+      "projectUniqueName": "C:\\Users\\DesarrolladorJunior1\\Hunter-CMS-Backend\\MreHunter.Api.csproj",
       "projectName": "MreHunter.Api",
-      "projectPath": "C:\\Users\\Administrador\\Desktop\\MrehunterP\\MreHunter.Api\\MreHunter.Api.csproj",
-      "packagesPath": "C:\\Users\\Administrador\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Administrador\\Desktop\\MrehunterP\\MreHunter.Api\\obj\\",
+      "projectPath": "C:\\Users\\DesarrolladorJunior1\\Hunter-CMS-Backend\\MreHunter.Api.csproj",
+      "packagesPath": "C:\\Users\\DesarrolladorJunior1\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\DesarrolladorJunior1\\Hunter-CMS-Backend\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Administrador\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\DesarrolladorJunior1\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -2147,6 +2147,7 @@
       },
       "frameworks": {
         "net8.0": {
+          "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {}
         }
@@ -2161,10 +2162,11 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
       "net8.0": {
+        "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
           "BCrypt.Net-Next": {
@@ -2227,7 +2229,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.301/PortableRuntimeIdentifierGraph.json"
       }
     }
   },
