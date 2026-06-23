@@ -154,6 +154,7 @@ builder.Services.AddScoped<PlanPlusSectionService>();
 builder.Services.AddScoped<PlanPlusBenefitService>();
 builder.Services.AddScoped<ProductsPetsBenefitService>();
 builder.Services.AddScoped<ProductsPetsMediaSectionService>();
+builder.Services.AddScoped<EmailService>();
 
 
 var app = builder.Build();

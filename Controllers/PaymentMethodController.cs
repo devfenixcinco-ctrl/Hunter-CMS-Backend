@@ -56,7 +56,7 @@ namespace MreHunter.Api.Controllers
                 items.Add(new PaymentMethod
                 {
                     Id = reader.GetInt32("id"),
-                    Title = ReadNullableString(reader, "title"),
+                    
                     Price = ReadNullableString(reader, "price"),
                     Description = ReadNullableString(reader, "description"),
                     Icon = ReadNullableString(reader, "icon"),
