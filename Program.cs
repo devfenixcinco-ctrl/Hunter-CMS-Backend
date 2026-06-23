@@ -22,7 +22,8 @@ builder.Services.AddCors(options =>
        policy.WithOrigins(
         "http://localhost:4200",
         "http://192.168.2.200:4200",
-        "http://192.168.2.133:4200"
+        "http://192.168.2.133:4200",
+        "https://hunter.pruebasfenix.com"
     )
             .AllowAnyHeader()
             .AllowAnyMethod()
