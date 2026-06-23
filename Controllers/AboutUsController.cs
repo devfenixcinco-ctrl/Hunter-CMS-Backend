@@ -36,9 +36,9 @@ namespace MreHunter.Api.Controllers
                    string.IsNullOrWhiteSpace(request.VisionText) ||
                    string.IsNullOrWhiteSpace(request.BenefitsTitle) ||
                    string.IsNullOrWhiteSpace(request.BenefitsSubtitle) ||
-                   request.BenefitsItems == null ||
-                   request.BenefitsItems.Count == 0 ||
-                   request.BenefitsItems.Any(x =>
+                   request.Benefits == null ||
+                    request.Benefits.Count == 0 ||
+                    request.Benefits.Any(x =>
                        x == null ||
                        string.IsNullOrWhiteSpace(x.Icon) ||
                        string.IsNullOrWhiteSpace(x.Text)) ||
@@ -143,7 +143,7 @@ namespace MreHunter.Api.Controllers
                     return Conflict(new { message = "Ya existe contenido de 'Nosotros'. Usa PUT para actualizar." });
             }
 
-            var benefitsJson = JsonSerializer.Serialize(request.BenefitsItems);
+            var benefitsJson = JsonSerializer.Serialize(request.Benefits);
 
             using var cmd = new MySqlCommand(@"
                 INSERT INTO about_us
@@ -247,7 +247,7 @@ namespace MreHunter.Api.Controllers
                 ctaImageUrl = await SaveImage(request.CtaImage, "aboutus", "cta_image");
             }
 
-            var benefitsJson = JsonSerializer.Serialize(request.BenefitsItems);
+            var benefitsJson = JsonSerializer.Serialize(request.Benefits);
 
             using var cmd = new MySqlCommand(@"
                 UPDATE about_us
