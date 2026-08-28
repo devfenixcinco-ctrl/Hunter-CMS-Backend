@@ -59,5 +59,49 @@ namespace MreHunter.Api.Models
         [Required]
         [DataType(DataType.MultilineText)]
         public string? Answer6 { get; set; }
+
+        [Required]
+        public string? Question7 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer7 { get; set; }
+        [Required]
+        public string? Question8 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer8 { get; set; }
+        [Required]
+        public string? Question9 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer9 { get; set; }
+        [Required]
+        public string? Question10 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer10 { get; set; }
+        [Required]
+        public string? Question11 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer11 { get; set; }
+        [Required]
+        public string? Question12 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer12 { get; set; }
+
+        [Required]
+        public string? Question13 { get; set; }
+
+        [Required]
+        [DataType(DataType.MultilineText)]
+        public string? Answer13 { get; set; }
     }
 }
