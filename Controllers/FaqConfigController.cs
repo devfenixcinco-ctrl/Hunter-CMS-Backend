@@ -94,6 +94,20 @@ namespace MreHunter.Api.Controllers
                 answer5 = ReadNullableString(reader, "answer_5"),
                 question6 = ReadNullableString(reader, "question_6"),
                 answer6 = ReadNullableString(reader, "answer_6"),
+                question7 = ReadNullableString(reader, "question_7"),
+                answer7 = ReadNullableString(reader, "answer_7"),
+                question8 = ReadNullableString(reader, "question_8"),
+                answer8 = ReadNullableString(reader, "answer_8"),
+                question9 = ReadNullableString(reader, "question_9"),
+                answer9 = ReadNullableString(reader, "answer_9"),
+                question10 = ReadNullableString(reader, "question_10"),
+                answer10 = ReadNullableString(reader, "answer_10"),
+                question11 = ReadNullableString(reader, "question_11"),
+                answer11 = ReadNullableString(reader, "answer_11"),
+                question12 = ReadNullableString(reader, "question_12"),
+                answer12 = ReadNullableString(reader, "answer_12"),
+                question13 = ReadNullableString(reader, "question_13"),
+                answer13 = ReadNullableString(reader, "answer_13"),
                 createdAt = reader.GetDateTime("created_at")
             });
         }
@@ -117,7 +131,14 @@ namespace MreHunter.Api.Controllers
                 IsInvalidString(req.Question3) || IsInvalidString(req.Answer3) ||
                 IsInvalidString(req.Question4) || IsInvalidString(req.Answer4) ||
                 IsInvalidString(req.Question5) || IsInvalidString(req.Answer5) ||
-                IsInvalidString(req.Question6) || IsInvalidString(req.Answer6))
+                IsInvalidString(req.Question6) || IsInvalidString(req.Answer6) ||
+                IsInvalidString(req.Question7) || IsInvalidString(req.Answer7) ||
+                IsInvalidString(req.Question8) || IsInvalidString(req.Answer8) ||
+                IsInvalidString(req.Question9) || IsInvalidString(req.Answer9) ||
+                IsInvalidString(req.Question10) || IsInvalidString(req.Answer10) ||
+                IsInvalidString(req.Question11) || IsInvalidString(req.Answer11) ||
+                IsInvalidString(req.Question12) || IsInvalidString(req.Answer12) ||
+                IsInvalidString(req.Question13) || IsInvalidString(req.Answer13))
             {
                 return BadRequest(new { message = "Todos los campos del FAQ son obligatorios" });
             }
@@ -149,7 +170,14 @@ namespace MreHunter.Api.Controllers
                                                question_3=@q3, answer_3=@a3,
                                                question_4=@q4, answer_4=@a4,
                                                question_5=@q5, answer_5=@a5,
-                                               question_6=@q6, answer_6=@a6
+                                               question_6=@q6, answer_6=@a6,
+                                               question_7=@q7, answer_7=@a7,
+                                               question_8=@q8, answer_8=@a8,
+                                               question_9=@q9, answer_9=@a9,
+                                               question_10=@q10, answer_10=@a10,
+                                               question_11=@q11, answer_11=@a11,
+                                               question_12=@q12, answer_12=@a12,
+                                               question_13=@q13, answer_13=@a13
                                            WHERE id=@id;";
 
                 using var cmd = new MySqlCommand(updateSql, conn);
@@ -169,6 +197,20 @@ namespace MreHunter.Api.Controllers
                 cmd.Parameters.AddWithValue("@a5", NormalizeValue(req.Answer5));
                 cmd.Parameters.AddWithValue("@q6", NormalizeValue(req.Question6));
                 cmd.Parameters.AddWithValue("@a6", NormalizeValue(req.Answer6));
+                cmd.Parameters.AddWithValue("@q7", NormalizeValue(req.Question7));
+                cmd.Parameters.AddWithValue("@a7", NormalizeValue(req.Answer7));
+                cmd.Parameters.AddWithValue("@q8", NormalizeValue(req.Question8));
+                cmd.Parameters.AddWithValue("@a8", NormalizeValue(req.Answer8));
+                cmd.Parameters.AddWithValue("@q9", NormalizeValue(req.Question9));
+                cmd.Parameters.AddWithValue("@a9", NormalizeValue(req.Answer9));
+                cmd.Parameters.AddWithValue("@q10", NormalizeValue(req.Question10));
+                cmd.Parameters.AddWithValue("@a10", NormalizeValue(req.Answer10));
+                cmd.Parameters.AddWithValue("@q11", NormalizeValue(req.Question11));
+                cmd.Parameters.AddWithValue("@a11", NormalizeValue(req.Answer11));
+                cmd.Parameters.AddWithValue("@q12", NormalizeValue(req.Question12));
+                cmd.Parameters.AddWithValue("@a12", NormalizeValue(req.Answer12));
+                cmd.Parameters.AddWithValue("@q13", NormalizeValue(req.Question13));
+                cmd.Parameters.AddWithValue("@a13", NormalizeValue(req.Answer13));
                 cmd.Parameters.AddWithValue("@id", existingId.Value);
 
                 var rows = await cmd.ExecuteNonQueryAsync();
@@ -188,10 +230,15 @@ namespace MreHunter.Api.Controllers
             const string insertSql = @"INSERT INTO faq_settings
                                        (hero_image_url, hero_title, hero_highlight_text, hero_subtitle,
                                         question_1, answer_1, question_2, answer_2, question_3, answer_3,
-                                        question_4, answer_4, question_5, answer_5, question_6, answer_6)
+                                        question_4, answer_4, question_5, answer_5, question_6, answer_6,
+                                        question_7, answer_7, question_8, answer_8, question_9, answer_9,
+                                        question_10, answer_10, question_11, answer_11, question_12, answer_12,
+                                        question_13, answer_13)
                                        VALUES
                                        (@heroImageUrl, @heroTitle, @heroHighlightText, @heroSubtitle,
-                                        @q1, @a1, @q2, @a2, @q3, @a3, @q4, @a4, @q5, @a5, @q6, @a6);
+                                        @q1, @a1, @q2, @a2, @q3, @a3, @q4, @a4, @q5, @a5, @q6, @a6,
+                                        @q7, @a7, @q8, @a8, @q9, @a9, @q10, @a10, @q11, @a11, @q12, @a12,
+                                        @q13, @a13);
                                        SELECT LAST_INSERT_ID();";
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
@@ -211,6 +258,20 @@ namespace MreHunter.Api.Controllers
             insertCmd.Parameters.AddWithValue("@a5", NormalizeValue(req.Answer5));
             insertCmd.Parameters.AddWithValue("@q6", NormalizeValue(req.Question6));
             insertCmd.Parameters.AddWithValue("@a6", NormalizeValue(req.Answer6));
+            insertCmd.Parameters.AddWithValue("@q7", NormalizeValue(req.Question7));
+            insertCmd.Parameters.AddWithValue("@a7", NormalizeValue(req.Answer7));
+            insertCmd.Parameters.AddWithValue("@q8", NormalizeValue(req.Question8));
+            insertCmd.Parameters.AddWithValue("@a8", NormalizeValue(req.Answer8));
+            insertCmd.Parameters.AddWithValue("@q9", NormalizeValue(req.Question9));
+            insertCmd.Parameters.AddWithValue("@a9", NormalizeValue(req.Answer9));
+            insertCmd.Parameters.AddWithValue("@q10", NormalizeValue(req.Question10));
+            insertCmd.Parameters.AddWithValue("@a10", NormalizeValue(req.Answer10));
+            insertCmd.Parameters.AddWithValue("@q11", NormalizeValue(req.Question11));
+            insertCmd.Parameters.AddWithValue("@a11", NormalizeValue(req.Answer11));
+            insertCmd.Parameters.AddWithValue("@q12", NormalizeValue(req.Question12));
+            insertCmd.Parameters.AddWithValue("@a12", NormalizeValue(req.Answer12));
+            insertCmd.Parameters.AddWithValue("@q13", NormalizeValue(req.Question13));
+            insertCmd.Parameters.AddWithValue("@a13", NormalizeValue(req.Answer13));
 
             int newId = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
@@ -242,7 +303,14 @@ namespace MreHunter.Api.Controllers
                 IsInvalidString(req.Question3) || IsInvalidString(req.Answer3) ||
                 IsInvalidString(req.Question4) || IsInvalidString(req.Answer4) ||
                 IsInvalidString(req.Question5) || IsInvalidString(req.Answer5) ||
-                IsInvalidString(req.Question6) || IsInvalidString(req.Answer6))
+                IsInvalidString(req.Question6) || IsInvalidString(req.Answer6) ||
+                IsInvalidString(req.Question7) || IsInvalidString(req.Answer7) ||
+                IsInvalidString(req.Question8) || IsInvalidString(req.Answer8) ||
+                IsInvalidString(req.Question9) || IsInvalidString(req.Answer9) ||
+                IsInvalidString(req.Question10) || IsInvalidString(req.Answer10) ||
+                IsInvalidString(req.Question11) || IsInvalidString(req.Answer11) ||
+                IsInvalidString(req.Question12) || IsInvalidString(req.Answer12) ||
+                IsInvalidString(req.Question13) || IsInvalidString(req.Answer13))
             {
                 return BadRequest(new { message = "Todos los campos del FAQ son obligatorios" });
             }
@@ -278,7 +346,14 @@ namespace MreHunter.Api.Controllers
                                      question_3=@q3, answer_3=@a3,
                                      question_4=@q4, answer_4=@a4,
                                      question_5=@q5, answer_5=@a5,
-                                     question_6=@q6, answer_6=@a6
+                                     question_6=@q6, answer_6=@a6,
+                                     question_7=@q7, answer_7=@a7,
+                                     question_8=@q8, answer_8=@a8,
+                                     question_9=@q9, answer_9=@a9,
+                                     question_10=@q10, answer_10=@a10,
+                                     question_11=@q11, answer_11=@a11,
+                                     question_12=@q12, answer_12=@a12,
+                                     question_13=@q13, answer_13=@a13
                                  WHERE id=@id;";
 
             using var cmd = new MySqlCommand(sql, conn);
@@ -298,6 +373,20 @@ namespace MreHunter.Api.Controllers
             cmd.Parameters.AddWithValue("@a5", NormalizeValue(req.Answer5));
             cmd.Parameters.AddWithValue("@q6", NormalizeValue(req.Question6));
             cmd.Parameters.AddWithValue("@a6", NormalizeValue(req.Answer6));
+            cmd.Parameters.AddWithValue("@q7", NormalizeValue(req.Question7));
+            cmd.Parameters.AddWithValue("@a7", NormalizeValue(req.Answer7));
+            cmd.Parameters.AddWithValue("@q8", NormalizeValue(req.Question8));
+            cmd.Parameters.AddWithValue("@a8", NormalizeValue(req.Answer8));
+            cmd.Parameters.AddWithValue("@q9", NormalizeValue(req.Question9));
+            cmd.Parameters.AddWithValue("@a9", NormalizeValue(req.Answer9));
+            cmd.Parameters.AddWithValue("@q10", NormalizeValue(req.Question10));
+            cmd.Parameters.AddWithValue("@a10", NormalizeValue(req.Answer10));
+            cmd.Parameters.AddWithValue("@q11", NormalizeValue(req.Question11));
+            cmd.Parameters.AddWithValue("@a11", NormalizeValue(req.Answer11));
+            cmd.Parameters.AddWithValue("@q12", NormalizeValue(req.Question12));
+            cmd.Parameters.AddWithValue("@a12", NormalizeValue(req.Answer12));
+            cmd.Parameters.AddWithValue("@q13", NormalizeValue(req.Question13));
+            cmd.Parameters.AddWithValue("@a13", NormalizeValue(req.Answer13));
             cmd.Parameters.AddWithValue("@id", latestId.Value);
 
             var rows = await cmd.ExecuteNonQueryAsync();
