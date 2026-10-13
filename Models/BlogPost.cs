@@ -9,6 +9,8 @@ namespace MreHunter.Api.Models
 
         public string? Text { get; set; }
 
+        public bool? Is_Notice { get; set; }
+
         public DateTime? PublishDate { get; set; }
         public DateTime? CreatedAt { get; set; }
     }

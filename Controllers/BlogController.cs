@@ -35,6 +35,7 @@ namespace MreHunter.Api.Controllers
             string sql = @"
                 SELECT id, image_url, title, content, publish_date, created_at
                 FROM blog_posts
+                WHERE is_notice = 0
                 ORDER BY created_at DESC;";
 
             using var cmd = new MySqlCommand(sql, conn);
@@ -65,7 +66,7 @@ namespace MreHunter.Api.Controllers
             string sql = @"
                 SELECT id, image_url, title, content, publish_date, created_at
                 FROM blog_posts
-                WHERE id = @id
+                WHERE id = @id AND is_notice = 0
                 LIMIT 1;";
 
             using var cmd = new MySqlCommand(sql, conn);
@@ -106,8 +107,8 @@ namespace MreHunter.Api.Controllers
             await conn.OpenAsync();
 
             string sql = @"
-                INSERT INTO blog_posts (image_url, title, content, publish_date)
-                VALUES (@img, @title, @content, @date);
+                INSERT INTO blog_posts (image_url, title, content, publish_date, is_notice)
+                VALUES (@img, @title, @content, @date, 0);
                 SELECT LAST_INSERT_ID();";
 
             using var cmd = new MySqlCommand(sql, conn);
@@ -129,7 +130,8 @@ namespace MreHunter.Api.Controllers
 
             string? imageUrl = null;
 
-            using (var getCurrent = new MySqlCommand("SELECT image_url FROM blog_posts WHERE id = @id LIMIT 1;", conn))
+            using (var getCurrent = new MySqlCommand(
+                "SELECT image_url FROM blog_posts WHERE id = @id AND is_notice = 0 LIMIT 1;", conn))
             {
                 getCurrent.Parameters.AddWithValue("@id", id);
                 var currentObj = await getCurrent.ExecuteScalarAsync();
@@ -151,7 +153,7 @@ namespace MreHunter.Api.Controllers
                     title = @title,
                     content = @content,
                     publish_date = @date
-                WHERE id = @id;";
+                WHERE id = @id AND is_notice = 0;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@img", (object?)imageUrl ?? DBNull.Value);
@@ -173,7 +175,7 @@ namespace MreHunter.Api.Controllers
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
 
-            string sql = @"DELETE FROM blog_posts WHERE id = @id;";
+            string sql = @"DELETE FROM blog_posts WHERE id = @id AND is_notice = 0;";
 
             using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
