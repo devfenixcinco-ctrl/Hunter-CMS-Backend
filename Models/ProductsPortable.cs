@@ -17,7 +17,7 @@ namespace MreHunter.Api.Models
         public string? ReasonDescription { get; set; }
 
         public string PaymentTitle { get; set; } = string.Empty;
-        public string? PrimaryButtonText { get; set; }
+        public string? BenefitsTitle { get; set; }
         public string? PrimaryButtonLink { get; set; }
         public string? SecondaryButtonText { get; set; }
         public string? SecondaryButtonLink { get; set; }

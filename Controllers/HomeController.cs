@@ -58,8 +58,12 @@ namespace MreHunter.Api.Controllers
             {
                 Id = reader.GetInt32("id"),
 
+                NumbersSlides = ReadNullableInt(reader, "number_slider"),
                 BannerTitle = ReadNullableString(reader, "banner_title"),
                 BannerText = ReadNullableString(reader, "banner_text"),
+                BannerUrl2 = ReadNullableString(reader, "banner_url_2"),
+                BannerUrl3 = ReadNullableString(reader, "banner_url_3"),
+                BannerUrl4 = ReadNullableString(reader, "banner_url_4"),
                 BannerButtonURL = ReadNullableString(reader, "banner_button_url"),
                 VideoUrl = ReadNullableString(reader, "videoUrl"),
 
@@ -111,8 +115,12 @@ namespace MreHunter.Api.Controllers
 
                 var updateSql = @"
                     UPDATE home_info SET
+                        number_slider=@number_slider,
                         banner_title=@banner_title,
                         banner_text=@banner_text,
+                        banner_url_2=@banner_url_2,
+                        banner_url_3=@banner_url_3,
+                        banner_url_4=@banner_url_4,
                         videoUrl=@videoUrl,
                         first_card_title=@first_card_title,
                         first_card_text=@first_card_text,
@@ -136,8 +144,10 @@ namespace MreHunter.Api.Controllers
 
                 using var cmd = new MySqlCommand(updateSql, conn);
 
-                cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@number_slider", (object?)req.NumbersSlides ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@banner_url_2", (object?)req.BannerUrl2 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@banner_url_3", (object?)req.BannerUrl3 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@banner_url_4", (object?)req.BannerUrl4 ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
 
                 cmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
@@ -180,8 +190,12 @@ namespace MreHunter.Api.Controllers
             var insertSql = @"
                 INSERT INTO home_info
                 (
+                    number_slider,
                     banner_title,
                     banner_text,
+                    banner_url_2,
+                    banner_url_3,
+                    banner_url_4,
                     banner_button_url,
                     videoUrl,
                     first_card_title,
@@ -207,6 +221,9 @@ namespace MreHunter.Api.Controllers
                 (
                     @banner_title,
                     @banner_text,
+                    @banner_url_2,
+                    @banner_url_3,
+                    @banner_url_4,
                     @banner_button_url,
                     @videoUrl,
                     @first_card_title,
@@ -232,8 +249,12 @@ namespace MreHunter.Api.Controllers
 
             using var insertCmd = new MySqlCommand(insertSql, conn);
 
+            insertCmd.Parameters.AddWithValue("@number_slider", (object?)req.NumbersSlides ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@banner_url_2", (object?)req.BannerUrl2 ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@banner_url_3", (object?)req.BannerUrl3 ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@banner_url_4", (object?)req.BannerUrl4 ?? DBNull.Value);
             insertCmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
 
             insertCmd.Parameters.AddWithValue("@first_card_title", (object?)req.FirstCardTitle ?? DBNull.Value);
@@ -279,8 +300,12 @@ namespace MreHunter.Api.Controllers
 
             var sql = @"
                 UPDATE home_info SET
+                    number_slider=@number_slider,
                     banner_title=@banner_title,
                     banner_text=@banner_text,
+                    banner_url_2=@banner_url_2,
+                    banner_url_3=@banner_url_3,
+                    banner_url_4=@banner_url_4,
                     banner_button_url=@banner_button_url,
                     videoUrl=@videoUrl,
                     first_card_title=@first_card_title,
@@ -305,8 +330,12 @@ namespace MreHunter.Api.Controllers
 
             using var cmd = new MySqlCommand(sql, conn);
 
+            cmd.Parameters.AddWithValue("@number_slider", (object?)req.NumbersSlides ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@banner_title", (object?)req.BannerTitle ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@banner_text", (object?)req.BannerText ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_url_2", (object?)req.BannerUrl2 ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_url_3", (object?)req.BannerUrl3 ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@banner_url_4", (object?)req.BannerUrl4 ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@banner_button_url", (object?)req.BannerButtonURL ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@videoUrl", (object?)req.VideoUrl ?? DBNull.Value);
 

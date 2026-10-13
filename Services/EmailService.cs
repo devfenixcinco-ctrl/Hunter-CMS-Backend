@@ -88,7 +88,7 @@ public async Task SendLoginAlertAsync(string toEmail, string username, string? i
 
     var builder = new BodyBuilder();
 
-    var logoPath = Path.Combine(_environment.WebRootPath ?? "", "images", "MreRolando.png");
+    var logoPath = Path.Combine(_environment.WebRootPath ?? "", "images", "logo-white.png");
 
     string logoHtml;
 

@@ -53,7 +53,7 @@ namespace MreHunter.Api.Services
                     : reader.GetString("reason_description"),
 
                 PaymentTitle = reader.GetString("payment_title"),
-                PrimaryButtonText = reader.IsDBNull(reader.GetOrdinal("primary_button_text"))
+                BenefitsTitle = reader.IsDBNull(reader.GetOrdinal("benefits_title"))
                     ? null
                     : reader.GetString("primary_button_text"),
                 PrimaryButtonLink = reader.IsDBNull(reader.GetOrdinal("primary_button_link"))
@@ -101,7 +101,7 @@ namespace MreHunter.Api.Services
                     reason_title,
                     reason_description,
                     payment_title,
-                    primary_button_text,
+                    benefits_title,
                     primary_button_link,
                     secondary_button_text,
                     secondary_button_link
@@ -115,7 +115,7 @@ namespace MreHunter.Api.Services
                     @ReasonTitle,
                     @ReasonDescription,
                     @PaymentTitle,
-                    @PrimaryButtonText,
+                    @BenefitsTitle,
                     @PrimaryButtonLink,
                     @SecondaryButtonText,
                     @SecondaryButtonLink
@@ -133,7 +133,7 @@ namespace MreHunter.Api.Services
             command.Parameters.AddWithValue("@ReasonDescription", (object?)request.ReasonDescription ?? DBNull.Value);
 
             command.Parameters.AddWithValue("@PaymentTitle", request.PaymentTitle);
-            command.Parameters.AddWithValue("@PrimaryButtonText", (object?)request.PrimaryButtonText ?? DBNull.Value);
+            command.Parameters.AddWithValue("@BenefitsTitle", (object?)request.BenefitsTitle ?? DBNull.Value);
             command.Parameters.AddWithValue("@PrimaryButtonLink", (object?)request.PrimaryButtonLink ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonText", (object?)request.SecondaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonLink", (object?)request.SecondaryButtonLink ?? DBNull.Value);
@@ -184,7 +184,7 @@ namespace MreHunter.Api.Services
                     reason_title = @ReasonTitle,
                     reason_description = @ReasonDescription,
                     payment_title = @PaymentTitle,
-                    primary_button_text = @PrimaryButtonText,
+                    benefits_title = @BenefitsTitle,
                     primary_button_link = @PrimaryButtonLink,
                     secondary_button_text = @SecondaryButtonText,
                     secondary_button_link = @SecondaryButtonLink
@@ -203,7 +203,7 @@ namespace MreHunter.Api.Services
             command.Parameters.AddWithValue("@ReasonDescription", (object?)request.ReasonDescription ?? DBNull.Value);
 
             command.Parameters.AddWithValue("@PaymentTitle", request.PaymentTitle);
-            command.Parameters.AddWithValue("@PrimaryButtonText", (object?)request.PrimaryButtonText ?? DBNull.Value);
+            command.Parameters.AddWithValue("@BenefitsTitle", (object?)request.BenefitsTitle ?? DBNull.Value);
             command.Parameters.AddWithValue("@PrimaryButtonLink", (object?)request.PrimaryButtonLink ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonText", (object?)request.SecondaryButtonText ?? DBNull.Value);
             command.Parameters.AddWithValue("@SecondaryButtonLink", (object?)request.SecondaryButtonLink ?? DBNull.Value);

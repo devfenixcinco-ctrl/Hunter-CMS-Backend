@@ -2,8 +2,13 @@ namespace MreHunter.Api.Models
 {
     public class HomeUpdateRequest
     {
+        public int? NumbersSlides { get; set; }
         public string? BannerTitle { get; set; }
         public string? BannerText { get; set; }
+
+        public string? BannerUrl2 { get; set; }
+        public string? BannerUrl3 { get; set; }
+        public string? BannerUrl4 { get; set; }
 
         public string? FirstCardTitle { get; set; }
         public string? FirstCardText { get; set; }
