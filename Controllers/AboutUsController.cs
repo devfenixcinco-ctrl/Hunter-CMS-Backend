@@ -22,6 +22,29 @@ namespace MreHunter.Api.Controllers
             _db = db;
         }
 
+        private static readonly JsonSerializerOptions BenefitsJsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+        /// <summary>
+        /// El CMS envía los beneficios como texto JSON en "BenefitsItemsJson" (multipart/form-data no
+        /// permite enviar la lista directamente). Si no llegó la lista "Benefits", se toma de ese JSON.
+        /// Devuelve un mensaje de error si el JSON no es válido; si todo está bien, null.
+        /// </summary>
+        private static string? ResolveBenefits(AboutUsRequest request)
+        {
+            if (request.Benefits is { Count: > 0 } || string.IsNullOrWhiteSpace(request.BenefitsItemsJson))
+                return null;
+
+            try
+            {
+                request.Benefits = JsonSerializer.Deserialize<List<BenefitItem>>(request.BenefitsItemsJson, BenefitsJsonOptions);
+                return null;
+            }
+            catch (JsonException)
+            {
+                return "BenefitsItemsJson no es un JSON válido. Formato esperado: [{\"Icon\":\"...\",\"Text\":\"...\"}].";
+            }
+        }
+
         private bool HasEmptyRequiredFields(AboutUsRequest request)
         {
             return string.IsNullOrWhiteSpace(request.HeroTitle) ||
@@ -124,6 +147,10 @@ namespace MreHunter.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var benefitsError = ResolveBenefits(request);
+            if (benefitsError != null)
+                return BadRequest(new { message = benefitsError });
+
             if (HasEmptyRequiredFields(request))
                 return BadRequest(new { message = "Todos los campos obligatorios deben tener un valor válido." });
 
@@ -194,6 +221,7 @@ namespace MreHunter.Api.Controllers
 
             cmd.Parameters.AddWithValue("@benefits_title", request.BenefitsTitle!.Trim());
             cmd.Parameters.AddWithValue("@benefits_subtitle", request.BenefitsSubtitle!.Trim());
+            cmd.Parameters.AddWithValue("@benefits_items_json", benefitsJson);
 
             cmd.Parameters.AddWithValue("@cta_title", request.CtaTitle!.Trim());
             cmd.Parameters.AddWithValue("@cta_button_text", request.CtaButtonText!.Trim());
@@ -217,6 +245,10 @@ namespace MreHunter.Api.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            var benefitsError = ResolveBenefits(request);
+            if (benefitsError != null)
+                return BadRequest(new { message = benefitsError });
 
             if (HasEmptyRequiredFields(request))
                 return BadRequest(new { message = "Todos los campos obligatorios deben tener un valor válido." });
@@ -304,6 +336,7 @@ namespace MreHunter.Api.Controllers
 
             cmd.Parameters.AddWithValue("@benefits_title", request.BenefitsTitle!.Trim());
             cmd.Parameters.AddWithValue("@benefits_subtitle", request.BenefitsSubtitle!.Trim());
+            cmd.Parameters.AddWithValue("@benefits_items_json", benefitsJson);
 
             cmd.Parameters.AddWithValue("@cta_title", request.CtaTitle!.Trim());
             cmd.Parameters.AddWithValue("@cta_button_text", request.CtaButtonText!.Trim());
