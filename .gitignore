@@ -1,10 +1,15 @@
 # Datos personales de postulantes (CV) - nunca al repositorio
 uploads/
 
-# Salidas de compilación y publicación
+# Salidas de compilación y publicación (se generan en cada build; nunca se versionan)
+bin/
+obj/
 publish/
-bin/Release/
-obj/Release/
+/Debug/
+
+# Archivos locales del editor
+.vs/
+*.user
 
 # Copias de la base de datos (contienen datos personales y hashes de contraseñas)
 *.sql
