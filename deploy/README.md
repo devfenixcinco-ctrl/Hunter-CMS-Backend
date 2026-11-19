@@ -130,6 +130,12 @@ Luego, en el sitio web y en el CMS:
 - [ ] Iniciar sesión en el CMS funciona.
 - [ ] Editar un texto en el CMS se refleja en el sitio **de inmediato** (la caché se invalida al guardar).
 - [ ] El formulario de contacto envía y llega el correo.
+- [ ] El sitio carga con datos **también desde `https://www.gpsrolandoplazas.com`** (antes de la Fase 1 ese origen no estaba en CORS y el sitio se veía sin datos).
+- [ ] En el servidor ya no aparecen rechazos de CORS del sitio propio:
+  ```bash
+  sudo journalctl -u miapi --since "1 hour ago" --no-pager | grep -A2 'CORS policy execution failed' | grep -oE 'Request origin [^ ]+' | sort | uniq -c
+  ```
+  No debe listar `gpsrolandoplazas.com` (con o sin `www`).
 
 Si algo falla: [Volver atrás](#3-volver-atrás).
 
