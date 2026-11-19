@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MreHunter.Api.Data;
 using MreHunter.Api.Models;
 using MySqlConnector;
@@ -16,6 +18,8 @@ namespace MreHunter.Api.Controllers
             _db = db;
         }
 
+        [AllowAnonymous]
+        [EnableRateLimiting("public-forms")]
         [HttpPost]
         public async Task<IActionResult> Subscribe([FromBody] NewsletterRequest req)
         {
@@ -39,6 +43,7 @@ namespace MreHunter.Api.Controllers
             return Ok(new { message = "Email registrado correctamente" });
         }
 
+        [Authorize] // Lista de correos de suscriptores: solo administradores
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

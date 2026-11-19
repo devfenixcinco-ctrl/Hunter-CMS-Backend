@@ -27,7 +27,7 @@ namespace MreHunter.Api.Services
 
             var user = _config["Email:SmtpUser"] ?? "";
             var pass = (_config["Email:SmtpPass"] ?? "").Replace(" ", "");
-            var from = _config["Email:From"] ?? user;
+            var from = string.IsNullOrWhiteSpace(_config["Email:From"]) ? user : _config["Email:From"]!;
 
             if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
                 throw new Exception("Falta Email:SmtpUser o Email:SmtpPass en appsettings.");
@@ -76,7 +76,7 @@ public async Task SendLoginAlertAsync(string toEmail, string username, string? i
 
     var user = _config["Email:SmtpUser"] ?? "";
     var pass = (_config["Email:SmtpPass"] ?? "").Replace(" ", "");
-    var from = _config["Email:From"] ?? user;
+    var from = string.IsNullOrWhiteSpace(_config["Email:From"]) ? user : _config["Email:From"]!;
 
     if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
         throw new Exception("Falta Email:SmtpUser o Email:SmtpPass en appsettings.");

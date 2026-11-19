@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MreHunter.Api.Infrastructure;
 using MySqlConnector;
 using MreHunter.Api.Services;
 using MreHunter.Api.Models;
@@ -18,16 +20,16 @@ namespace MreHunter.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly Db _db;
-        private readonly EmailService _email;
+        private readonly EmailQueue _emailQueue;
         private readonly IConfiguration _config;
 
-        public AuthController(Db db, EmailService email, IConfiguration config)
+        public AuthController(Db db, EmailQueue emailQueue, IConfiguration config)
         {
             _db = db;
-            _email = email;
+            _emailQueue = emailQueue;
             _config = config;
         }
-        //  REGISTER
+        //  REGISTER (requiere token: solo un administrador autenticado puede crear usuarios)
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -86,7 +88,7 @@ namespace MreHunter.Api.Controllers
                         </p>
                     </div>";
 
-                await _email.SendAsync(email, subject, body);
+                _emailQueue.Enqueue(e => e.SendAsync(email, subject, body));
             }
             catch { }
 
@@ -94,6 +96,7 @@ namespace MreHunter.Api.Controllers
         }
 
         //  LOGIN (Rate limiting por sesión + lockout por usuario)
+        [AllowAnonymous]
         [EnableRateLimiting("login")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -127,7 +130,12 @@ namespace MreHunter.Api.Controllers
 
                 using var reader = await cmd.ExecuteReaderAsync();
                 if (!await reader.ReadAsync())
-                    return NotFound(new { message = "Usuario no encontrado" });
+                {
+                    // Se verifica contra un hash ficticio para que el tiempo de respuesta sea igual
+                    // exista o no el usuario, y se responde lo mismo que con contraseña incorrecta.
+                    BCrypt.Net.BCrypt.Verify(password, DummyPasswordHash);
+                    return InvalidCredentials();
+                }
 
                 userId = Convert.ToInt64(reader["id"]);
                 dbEmail = reader["email"].ToString()!;
@@ -175,12 +183,7 @@ namespace MreHunter.Api.Controllers
                     await upd.ExecuteNonQueryAsync();
                 }
 
-                return StatusCode(StatusCodes.Status403Forbidden, new
-                {
-                    message = "Contraseña incorrecta",
-                    remainingAttempts = Math.Max(0, MAX_FAILED - failedAttempts),
-                    locked = newLockoutUntil != null
-                });
+                return InvalidCredentials();
             }
 
             using (var reset = new MySqlCommand(@"
@@ -198,11 +201,13 @@ namespace MreHunter.Api.Controllers
             var token = GenerateJwtToken(userId, dbEmail, dbName);
 
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            try { await _email.SendLoginAlertAsync(dbEmail, dbName, ip); } catch { }
+            _emailQueue.Enqueue(e => e.SendLoginAlertAsync(dbEmail, dbName, ip));
 
             return Ok(new { message = "Login exitoso", token });
         }
 
+        [AllowAnonymous]
+        [EnableRateLimiting("public-forms")]
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
@@ -283,8 +288,7 @@ namespace MreHunter.Api.Controllers
                         <p>Este enlace expira en 30 minutos.</p>
                     </div>";
 
-                try { await _email.SendAsync(email, subject, body); }
-                catch (Exception ex) { Console.WriteLine("SMTP ERROR (forgot): " + ex.Message); }
+                _emailQueue.Enqueue(e => e.SendAsync(email, subject, body));
 
                 return Ok(okResponse);
             }
@@ -295,6 +299,8 @@ namespace MreHunter.Api.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [EnableRateLimiting("login")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
@@ -363,6 +369,12 @@ namespace MreHunter.Api.Controllers
 
             return Ok(new { message = "Contraseña actualizada correctamente." });
         }
+
+        private static readonly string DummyPasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+
+        // Respuesta única para usuario inexistente o contraseña incorrecta: no revela qué correos están registrados.
+        private ObjectResult InvalidCredentials()
+            => StatusCode(StatusCodes.Status401Unauthorized, new { message = "Correo o contraseña incorrectos." });
 
         private string GenerateJwtToken(long userId, string email, string name)
         {

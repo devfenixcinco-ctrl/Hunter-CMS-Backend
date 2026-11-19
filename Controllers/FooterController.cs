@@ -46,18 +46,21 @@ namespace MreHunter.Api.Controllers
             if (!await reader.ReadAsync())
                 return NotFound(new { message = "No hay footer aún" });
 
-            var data = new FooterInfo
-            {
-                Id = reader.GetInt32("id"),
-                FooterText = ReadNullableString(reader, "footer_text"),
-                Address = ReadNullableString(reader, "address"),
-                Email = ReadNullableString(reader, "email"),
-                SocialUsername = ReadNullableString(reader, "social_username"),
-                CreatedAt = reader.GetDateTime("created_at")
-            };
-
-            return Ok(data);
+            return Ok(Map(reader));
         }
+
+        internal const string SelectLatestSql = "SELECT * FROM footer ORDER BY id DESC LIMIT 1;";
+
+        // Compartido con SiteController (/api/site/layout) para que ambas respuestas sean idénticas.
+        internal static FooterInfo Map(MySqlDataReader reader) => new FooterInfo
+        {
+            Id = reader.GetInt32("id"),
+            FooterText = ReadNullableString(reader, "footer_text"),
+            Address = ReadNullableString(reader, "address"),
+            Email = ReadNullableString(reader, "email"),
+            SocialUsername = ReadNullableString(reader, "social_username"),
+            CreatedAt = reader.GetDateTime("created_at")
+        };
 
         [Authorize]
         [HttpPost]

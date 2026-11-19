@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using MreHunter.Api.Infrastructure;
 
 namespace MreHunter.Api.Services
 {
@@ -41,7 +42,7 @@ namespace MreHunter.Api.Services
 
             Directory.CreateDirectory(uploadsFolder);
 
-            var extension = Path.GetExtension(file.FileName);
+            var extension = UploadValidation.EnsureImage(file);
             var fileName = $"{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(uploadsFolder, fileName);
 
