@@ -1,0 +1,2 @@
+# Los scripts que se ejecutan en Linux deben conservar finales de línea LF.
+*.sh text eol=lf
