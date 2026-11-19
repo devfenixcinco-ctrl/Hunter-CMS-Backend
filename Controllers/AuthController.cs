@@ -11,6 +11,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MreHunter.Api.Controllers
 {
@@ -22,12 +23,14 @@ namespace MreHunter.Api.Controllers
         private readonly Db _db;
         private readonly EmailQueue _emailQueue;
         private readonly IConfiguration _config;
+        private readonly IMemoryCache _cache;
 
-        public AuthController(Db db, EmailQueue emailQueue, IConfiguration config)
+        public AuthController(Db db, EmailQueue emailQueue, IConfiguration config, IMemoryCache cache)
         {
             _db = db;
             _emailQueue = emailQueue;
             _config = config;
+            _cache = cache;
         }
         //  REGISTER (requiere token: solo un administrador autenticado puede crear usuarios)
         [HttpPost("register")]
@@ -42,8 +45,8 @@ namespace MreHunter.Api.Controllers
                 string.IsNullOrWhiteSpace(name))
                 return BadRequest(new { message = "Email, password y name son requeridos." });
 
-            if (password.Length < 6)
-                return BadRequest(new { message = "La contraseña debe tener al menos 6 caracteres." });
+            if (password.Length < MinPasswordLength)
+                return BadRequest(new { message = $"La contraseña debe tener al menos {MinPasswordLength} caracteres." });
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
@@ -95,20 +98,27 @@ namespace MreHunter.Api.Controllers
             return Ok(new { message = "Usuario registrado correctamente.", userId });
         }
 
-        //  LOGIN (Rate limiting por sesión + lockout por usuario)
+        //  LOGIN
+        //  - Límite global por IP (rate limiting "login": 5 por minuto).
+        //  - Bloqueo por correo + IP: tras 3 fallos, ESE equipo queda bloqueado para ESE correo 3 minutos.
+        //    Un tercero ya no puede bloquear la cuenta de un administrador desde otra IP, y como se aplica
+        //    igual a correos que no existen, el bloqueo no revela qué correos están registrados.
         [AllowAnonymous]
         [EnableRateLimiting("login")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            const int MAX_FAILED = 3;
-            const int LOCKOUT_MINUTES = 3;
-
             var email = (request.Email ?? "").Trim().ToLower();
             var password = request.Password ?? "";
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
                 return BadRequest(new { message = "Email y contraseña son obligatorios." });
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "sin-ip";
+            var failKey = $"login-fail:{email}:{ip}";
+
+            if (_cache.TryGetValue(failKey, out int fails) && fails >= MaxFailedLogins)
+                return TooManyFailedLogins();
 
             using var conn = _db.GetConnection();
             await conn.OpenAsync();
@@ -117,11 +127,9 @@ namespace MreHunter.Api.Controllers
             string dbEmail;
             string dbName;
             string passwordHash;
-            int failedAttempts;
-            DateTime? lockoutUntil;
 
             using (var cmd = new MySqlCommand(@"
-                SELECT id, email, name, password_hash, failed_login_attempts, lockout_until
+                SELECT id, email, name, password_hash
                 FROM users
                 WHERE LOWER(email)=@email
                 LIMIT 1;", conn))
@@ -134,6 +142,7 @@ namespace MreHunter.Api.Controllers
                     // Se verifica contra un hash ficticio para que el tiempo de respuesta sea igual
                     // exista o no el usuario, y se responde lo mismo que con contraseña incorrecta.
                     BCrypt.Net.BCrypt.Verify(password, DummyPasswordHash);
+                    RegisterFailedLogin(failKey);
                     return InvalidCredentials();
                 }
 
@@ -141,50 +150,17 @@ namespace MreHunter.Api.Controllers
                 dbEmail = reader["email"].ToString()!;
                 dbName = reader["name"].ToString()!;
                 passwordHash = reader["password_hash"].ToString()!;
-
-                failedAttempts = reader["failed_login_attempts"] == DBNull.Value ? 0 : Convert.ToInt32(reader["failed_login_attempts"]);
-                lockoutUntil = reader["lockout_until"] == DBNull.Value ? null : Convert.ToDateTime(reader["lockout_until"]);
             }
 
             var now = DateTime.UtcNow;
 
-            if (lockoutUntil.HasValue && lockoutUntil.Value > now)
-            {
-                var remainingMinutes = (int)Math.Ceiling((lockoutUntil.Value - now).TotalMinutes);
-                return StatusCode(423, new
-                {
-                    message = "Cuenta temporalmente bloqueada por intentos fallidos.",
-                    retryAfterMinutes = remainingMinutes
-                });
-            }
-
             if (!BCrypt.Net.BCrypt.Verify(password, passwordHash))
             {
-                failedAttempts++;
-
-                DateTime? newLockoutUntil = null;
-                if (failedAttempts >= MAX_FAILED)
-                {
-                    newLockoutUntil = now.AddMinutes(LOCKOUT_MINUTES);
-                    failedAttempts = MAX_FAILED;
-                }
-
-                using (var upd = new MySqlCommand(@"
-                    UPDATE users
-                    SET failed_login_attempts=@failed,
-                        lockout_until=@lockout_until,
-                        updated_at=@now
-                    WHERE id=@id;", conn))
-                {
-                    upd.Parameters.AddWithValue("@failed", failedAttempts);
-                    upd.Parameters.AddWithValue("@lockout_until", (object?)newLockoutUntil ?? DBNull.Value);
-                    upd.Parameters.AddWithValue("@now", now);
-                    upd.Parameters.AddWithValue("@id", userId);
-                    await upd.ExecuteNonQueryAsync();
-                }
-
+                RegisterFailedLogin(failKey);
                 return InvalidCredentials();
             }
+
+            _cache.Remove(failKey);
 
             using (var reset = new MySqlCommand(@"
                 UPDATE users
@@ -200,7 +176,6 @@ namespace MreHunter.Api.Controllers
 
             var token = GenerateJwtToken(userId, dbEmail, dbName);
 
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             _emailQueue.Enqueue(e => e.SendLoginAlertAsync(dbEmail, dbName, ip));
 
             return Ok(new { message = "Login exitoso", token });
@@ -310,8 +285,8 @@ namespace MreHunter.Api.Controllers
             if (string.IsNullOrWhiteSpace(token))
                 return BadRequest(new { message = "Token requerido." });
 
-            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
-                return BadRequest(new { message = "La contraseña debe tener al menos 6 caracteres." });
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < MinPasswordLength)
+                return BadRequest(new { message = $"La contraseña debe tener al menos {MinPasswordLength} caracteres." });
 
             var tokenHash = Sha256(token);
 
@@ -371,6 +346,22 @@ namespace MreHunter.Api.Controllers
         }
 
         private static readonly string DummyPasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+
+        /// <summary>Largo mínimo al crear o restablecer una contraseña. Las existentes no se ven afectadas.</summary>
+        private const int MinPasswordLength = 10;
+
+        private const int MaxFailedLogins = 3;
+        private static readonly TimeSpan FailedLoginWindow = TimeSpan.FromMinutes(3);
+
+        // Cada fallo reinicia la ventana: el bloqueo dura 3 minutos desde el último intento fallido.
+        private void RegisterFailedLogin(string key)
+        {
+            var fails = _cache.TryGetValue(key, out int current) ? current + 1 : 1;
+            _cache.Set(key, fails, FailedLoginWindow);
+        }
+
+        private ObjectResult TooManyFailedLogins()
+            => StatusCode(StatusCodes.Status401Unauthorized, new { message = "Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo." });
 
         // Respuesta única para usuario inexistente o contraseña incorrecta: no revela qué correos están registrados.
         private ObjectResult InvalidCredentials()

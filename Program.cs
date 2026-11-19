@@ -36,18 +36,21 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 // ---------- CORS ----------
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+// Sin orígenes configurados el sitio no podría llamar a la API: mejor no arrancar
+// (el deploy lo detecta y vuelve solo a la versión anterior).
+if (allowedOrigins.Length == 0)
+    throw new InvalidOperationException("Cors:AllowedOrigins no está configurado en appsettings.json.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:4200",
-                "http://192.168.2.200:4200",
-                "http://192.168.2.133:4200",
-                "https://hunter.pruebasfenix.com",
-                "https://gpsrolandoplazas.com",
-                "https://www.gpsrolandoplazas.com"
-            )
+        // Producción: solo el sitio público (appsettings.json).
+        // Desarrollo: además localhost, la red local y el sitio de pruebas (appsettings.Development.json).
+        // En el servidor se pueden agregar más con Cors__AllowedOrigins__2=https://... en /etc/miapi.env.
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
@@ -186,6 +189,7 @@ builder.Services
 
 // ---------- Servicios ----------
 builder.Services.AddSingleton<Db>();
+builder.Services.AddMemoryCache(); // Bloqueo de login por correo + IP (AuthController)
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddHostedService<EmailBackgroundService>();

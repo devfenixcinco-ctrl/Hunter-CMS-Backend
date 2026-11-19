@@ -201,6 +201,18 @@ namespace MreHunter.Api.Controllers
             });
         }
 
+        // La extensión y el tipo los decide quien sube el archivo; la firma de los primeros bytes no.
+        // Así un ejecutable renombrado a .pdf se rechaza.
+        if (!await HasValidDocumentSignatureAsync(request.CvFile, fileExtension))
+        {
+            return BadRequest(new
+            {
+                ok = false,
+                code = "INVALID_FILE_CONTENT",
+                mensaje = "El contenido del archivo no corresponde a un documento PDF, DOC o DOCX válido."
+            });
+        }
+
         var uploadsFolder = Path.Combine(_environment.ContentRootPath, "uploads", "cv");
 
         if (!Directory.Exists(uploadsFolder))
@@ -292,5 +304,30 @@ namespace MreHunter.Api.Controllers
         });
     }
 }
+
+        /// <summary>
+        /// Comprueba la firma ("número mágico") de los primeros bytes del archivo:
+        /// PDF empieza con "%PDF-", .doc es un documento OLE (D0 CF 11 E0 A1 B1 1A E1)
+        /// y .docx es un ZIP (50 4B 03 04).
+        /// </summary>
+        private static async Task<bool> HasValidDocumentSignatureAsync(IFormFile file, string extension)
+        {
+            byte[]? expected = extension.ToLowerInvariant() switch
+            {
+                ".pdf"  => new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D },
+                ".doc"  => new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 },
+                ".docx" => new byte[] { 0x50, 0x4B, 0x03, 0x04 },
+                _ => null
+            };
+
+            if (expected == null)
+                return false;
+
+            var header = new byte[expected.Length];
+            await using var stream = file.OpenReadStream();
+            var read = await stream.ReadAsync(header.AsMemory(0, header.Length));
+
+            return read == expected.Length && header.AsSpan().SequenceEqual(expected);
+        }
     }
 }
