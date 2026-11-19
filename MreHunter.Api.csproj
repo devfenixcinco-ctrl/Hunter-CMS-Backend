@@ -4,7 +4,17 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Secretos locales (SMTP) fuera del repositorio: dotnet user-secrets set "Email:SmtpPass" "..." -->
+    <UserSecretsId>mrehunter-api-local</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Las imágenes subidas viven en el servidor: el publish/deploy no debe sobrescribirlas. -->
+    <Content Update="wwwroot\uploads\**" CopyToPublishDirectory="Never" />
+    <!-- Hojas de vida de postulantes: datos personales, nunca se publican ni se versionan. -->
+    <Content Remove="uploads\**" />
+    <None Remove="uploads\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />

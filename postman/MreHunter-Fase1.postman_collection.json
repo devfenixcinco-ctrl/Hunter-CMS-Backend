@@ -1,0 +1,270 @@
+{
+  "info": {
+    "name": "MreHunter API - Pruebas Fase 1",
+    "description": "Pruebas de la Fase 1 (rendimiento + seguridad).\n\nAntes de ejecutar:\n1. Levanta la API local: dotnet run --launch-profile http (queda en http://localhost:5119).\n2. En las variables de la colección completa adminEmail y adminPassword con un usuario que exista en tu base local. No guardes la contraseña en el valor 'Initial', solo en 'Current'.\n3. Ejecuta las carpetas EN ORDEN (Collection Runner). La carpeta 4 provoca bloqueos temporales: déjala de última.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5119" },
+    { "key": "origin", "value": "https://gpsrolandoplazas.com" },
+    { "key": "adminEmail", "value": "" },
+    { "key": "adminPassword", "value": "" },
+    { "key": "token", "value": "" },
+    { "key": "settingsBody", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Autenticación",
+      "item": [
+        {
+          "name": "Login correcto (guarda el token)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const t = pm.response.json().token;",
+              "pm.test('Devuelve token', () => pm.expect(t).to.be.a('string').and.not.empty);",
+              "pm.collectionVariables.set('token', t);",
+              "pm.test('Responde rápido (el correo va en segundo plano)', () => pm.expect(pm.response.responseTime).to.be.below(1500));"
+            ] }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "1. Rendimiento",
+      "item": [
+        {
+          "name": "Settings - 1ª llamada (llena la caché)",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/settings" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "Settings - 2ª llamada (servida desde caché)",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/settings" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Trae cabecera Age (viene de la caché de salida)', () => pm.response.to.have.header('Age'));"
+          ] } }]
+        },
+        {
+          "name": "Site layout (header + footer + settings + contacto)",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/site/layout" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "const j = pm.response.json();",
+            "pm.test('Trae los 4 bloques', () => pm.expect(j).to.have.all.keys('header','footer','settings','contactInfo'));"
+          ] } }]
+        },
+        {
+          "name": "Compresión gzip/brotli",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept-Encoding", "value": "gzip, br" }],
+            "url": "{{baseUrl}}/api/faqconfig"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Respuesta comprimida (Content-Encoding)', () => pm.response.to.have.header('Content-Encoding'));"
+          ] } }]
+        },
+        {
+          "name": "Preflight CORS cacheado 2 horas",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "{{origin}}" },
+              { "key": "Access-Control-Request-Method", "value": "POST" },
+              { "key": "Access-Control-Request-Headers", "value": "authorization,content-type" }
+            ],
+            "url": "{{baseUrl}}/api/blog"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('204 No Content', () => pm.response.to.have.status(204));",
+            "pm.test('Access-Control-Max-Age = 7200', () => pm.expect(pm.response.headers.get('Access-Control-Max-Age')).to.eql('7200'));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "2. Seguridad - sin token (todo debe dar 401)",
+      "auth": { "type": "noauth" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('401 sin token', () => pm.response.to.have.status(401));"
+      ] } }],
+      "item": [
+        {
+          "name": "Crear post de blog",
+          "request": {
+            "method": "POST", "header": [],
+            "body": { "mode": "formdata", "formdata": [{ "key": "Title", "value": "prueba", "type": "text" }] },
+            "url": "{{baseUrl}}/api/blog"
+          }
+        },
+        {
+          "name": "Crear noticia",
+          "request": {
+            "method": "POST", "header": [],
+            "body": { "mode": "formdata", "formdata": [{ "key": "Title", "value": "prueba", "type": "text" }] },
+            "url": "{{baseUrl}}/api/noticias"
+          }
+        },
+        {
+          "name": "Modificar Home",
+          "request": {
+            "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/api/home"
+          }
+        },
+        {
+          "name": "Modificar Settings",
+          "request": {
+            "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/api/settings"
+          }
+        },
+        {
+          "name": "Borrar sección GPS",
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/mission-accomplished/gps-section/1" }
+        },
+        {
+          "name": "Registrar usuario (antes era público)",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"intruso@ejemplo.com\",\n  \"password\": \"123456\",\n  \"name\": \"Intruso\"\n}" },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Ver suscriptores del newsletter",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/newsletter" }
+        },
+        {
+          "name": "Ver postulaciones de empleo",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/work-with-us" }
+        }
+      ]
+    },
+    {
+      "name": "3. Con token (administrador)",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Ver suscriptores del newsletter",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/newsletter" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 con token', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "Ver postulaciones de empleo",
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/work-with-us" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 con token', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "Caché: leer settings actuales",
+          "auth": { "type": "noauth" },
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/settings" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const s = pm.response.json();",
+            "pm.collectionVariables.set('settingsBody', JSON.stringify({",
+            "  primaryColor: s.primaryColor, secondaryColor: s.secondaryColor,",
+            "  textPrimaryColor: s.textPrimaryColor, textSecondaryColor: s.textSecondaryColor,",
+            "  hoverBackgroundColor: s.hoverBackgroundColor, whatsappNumber: s.whatsappNumber",
+            "}));",
+            "pm.test('200 OK', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "Caché: guardar settings (mismos valores, no cambia nada)",
+          "request": {
+            "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{{settingsBody}}" },
+            "url": "{{baseUrl}}/api/settings"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 con token', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "Caché: settings tras guardar (la caché se invalidó)",
+          "auth": { "type": "noauth" },
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/settings" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Sin cabecera Age: se leyó de la base de datos otra vez', () => pm.response.to.not.have.header('Age'));"
+          ] } }]
+        },
+        {
+          "name": "Subir imagen FAQ con extensión no permitida (.txt) - 400",
+          "request": {
+            "method": "POST", "header": [],
+            "body": { "mode": "formdata", "formdata": [
+              { "key": "HeroImage", "type": "file", "src": [], "description": "Selecciona cualquier archivo .txt o .html de tu PC" }
+            ] },
+            "url": "{{baseUrl}}/api/faqconfig",
+            "description": "Selecciona un archivo .txt/.html en el campo HeroImage antes de enviar. Si el endpoint pide otros campos obligatorios puede responder 400 por eso; revisa que el mensaje diga 'Formato no permitido'."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "4. Login y límites (ejecutar de último)",
+      "auth": { "type": "noauth" },
+      "item": [
+        {
+          "name": "Login con correo inexistente - 401 mensaje genérico",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"no-existe@ejemplo.com\",\n  \"password\": \"cualquiera\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('401', () => pm.response.to.have.status(401));",
+            "pm.test('Mensaje genérico', () => pm.expect(pm.response.json().message).to.eql('Correo o contraseña incorrectos.'));"
+          ] } }]
+        },
+        {
+          "name": "Login con contraseña incorrecta - mismo 401 (cuenta para el bloqueo)",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"clave-incorrecta\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('401', () => pm.response.to.have.status(401));",
+            "pm.test('Mismo mensaje que correo inexistente', () => pm.expect(pm.response.json().message).to.eql('Correo o contraseña incorrectos.'));"
+          ] } }]
+        },
+        {
+          "name": "Rate limit - repetir 6 veces seguidas: la 6ª debe dar 429",
+          "request": {
+            "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"no-existe@ejemplo.com\",\n  \"password\": \"x\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Límite: 5 intentos por minuto por IP. En el Runner pon Iterations = 6 solo para esta petición, o envíala a mano varias veces."
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('401 o 429', () => pm.expect(pm.response.code).to.be.oneOf([401, 429]));",
+            "if (pm.response.code === 429) pm.test('Trae Retry-After', () => pm.response.to.have.header('Retry-After'));"
+          ] } }]
+        }
+      ]
+    }
+  ]
+}

@@ -25,20 +25,23 @@ namespace MreHunter.Api.Controllers
             if (!await reader.ReadAsync())
                 return NotFound(new { message = "No hay settings aún" });
 
-            var data = new GeneralSettings
-            {
-                Id = reader.GetInt32("id"),
-                PrimaryColor = reader["primary_color"]?.ToString() ?? string.Empty,
-                SecondaryColor = reader["secondary_color"]?.ToString(),
-                TextPrimaryColor = reader["text_primary_color"]?.ToString(),
-                TextSecondaryColor = reader["text_secondary_color"]?.ToString(),
-                HoverBackgroundColor = reader["hover_background_color"]?.ToString(),
-                WhatsappNumber = reader["whatsapp_number"]?.ToString() ?? string.Empty,
-                CreatedAt = reader.GetDateTime("created_at")
-            };
-
-            return Ok(data);
+            return Ok(Map(reader));
         }
+
+        internal const string SelectLatestSql = "SELECT * FROM general_settings LIMIT 1;";
+
+        // Compartido con SiteController (/api/site/layout) para que ambas respuestas sean idénticas.
+        internal static GeneralSettings Map(MySqlDataReader reader) => new GeneralSettings
+        {
+            Id = reader.GetInt32("id"),
+            PrimaryColor = reader["primary_color"]?.ToString() ?? string.Empty,
+            SecondaryColor = reader["secondary_color"]?.ToString(),
+            TextPrimaryColor = reader["text_primary_color"]?.ToString(),
+            TextSecondaryColor = reader["text_secondary_color"]?.ToString(),
+            HoverBackgroundColor = reader["hover_background_color"]?.ToString(),
+            WhatsappNumber = reader["whatsapp_number"]?.ToString() ?? string.Empty,
+            CreatedAt = reader.GetDateTime("created_at")
+        };
 
     [HttpPost("UploadLogo")]
     [Consumes("multipart/form-data")]

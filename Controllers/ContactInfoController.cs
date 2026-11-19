@@ -35,17 +35,22 @@ namespace MreHunter.Api.Controllers
             if (!await reader.ReadAsync())
                 return NotFound(new { message = "No hay información de contacto registrada." });
 
-            return Ok(new
-            {
-                id = reader.GetInt32("id"),
-                phone = reader["phone"]?.ToString(),
-                whatsappText = reader["whatsapp_text"]?.ToString(),
-                whatsappLink = reader["whatsapp_link"]?.ToString(),
-                email = reader["email"]?.ToString(),
-                createdAt = reader["created_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["created_at"]),
-                updatedAt = reader["updated_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["updated_at"])
-            });
+            return Ok(Map(reader));
         }
+
+        internal const string SelectLatestSql = "SELECT * FROM contact_info ORDER BY id DESC LIMIT 1;";
+
+        // Compartido con SiteController (/api/site/layout) para que ambas respuestas sean idénticas.
+        internal static object Map(MySqlDataReader reader) => new
+        {
+            id = reader.GetInt32("id"),
+            phone = reader["phone"]?.ToString(),
+            whatsappText = reader["whatsapp_text"]?.ToString(),
+            whatsappLink = reader["whatsapp_link"]?.ToString(),
+            email = reader["email"]?.ToString(),
+            createdAt = reader["created_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["created_at"]),
+            updatedAt = reader["updated_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["updated_at"])
+        };
 
         [Authorize]
         [Authorize]

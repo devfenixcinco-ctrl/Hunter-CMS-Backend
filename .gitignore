@@ -1,0 +1,12 @@
+# Datos personales de postulantes (CV) - nunca al repositorio
+uploads/
+
+# Salidas de compilación y publicación
+publish/
+bin/Release/
+obj/Release/
+
+# Copias de la base de datos (contienen datos personales y hashes de contraseñas)
+*.sql
+*.sql.gz
+db-dumps/

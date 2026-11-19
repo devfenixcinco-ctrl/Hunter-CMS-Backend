@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MreHunter.Api.Data;
+using MreHunter.Api.Infrastructure;
 using MreHunter.Api.Models;
 using MySqlConnector;
 using Swashbuckle.AspNetCore.Filters;
@@ -52,7 +53,7 @@ namespace MreHunter.Api.Controllers
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "faq");
             Directory.CreateDirectory(uploadsFolder);
 
-            var extension = Path.GetExtension(file.FileName);
+            var extension = UploadValidation.EnsureImage(file);
             var fileName = $"{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(uploadsFolder, fileName);
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MySqlConnector;
 using MreHunter.Api.Models;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace MreHunter.Api.Controllers
             _environment = environment;
         }
 
+        [Authorize] // Datos personales de postulantes: solo administradores
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -71,30 +73,26 @@ namespace MreHunter.Api.Controllers
                     data = applications
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new
                 {
                     ok = false,
                     code = "SERVER_ERROR",
-                    mensaje = "Error al obtener las postulaciones.",
-                    error = ex.Message
+                    mensaje = "Error al obtener las postulaciones."
                 });
             }
         }
 
+        [AllowAnonymous]
+        [EnableRateLimiting("public-forms")]
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Apply([FromForm] JobApplicationRequest request)
         {
-    Console.WriteLine("==================================================");
-    Console.WriteLine("Entró a POST /api/Jobs");
-    Console.WriteLine($"Hora UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
-    Console.WriteLine($"Request Content-Type: {Request.ContentType}");
 
     try
     {
-        Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
 
         if (!ModelState.IsValid)
         {
@@ -104,7 +102,6 @@ namespace MreHunter.Api.Controllers
                 var errors = kvp.Value.Errors;
                 foreach (var error in errors)
                 {
-                    Console.WriteLine($"ModelState error en '{key}': {error.ErrorMessage}");
                 }
             }
 
@@ -116,17 +113,12 @@ namespace MreHunter.Api.Controllers
             });
         }
 
-        Console.WriteLine($"DocumentId: {request.DocumentId}");
-        Console.WriteLine($"FirstName: {request.FirstName}");
-        Console.WriteLine($"LastName: {request.LastName}");
-        Console.WriteLine($"Phone: {request.Phone}");
 
         if (string.IsNullOrWhiteSpace(request.DocumentId) ||
             string.IsNullOrWhiteSpace(request.FirstName) ||
             string.IsNullOrWhiteSpace(request.LastName) ||
             string.IsNullOrWhiteSpace(request.Phone))
         {
-            Console.WriteLine("Faltan campos obligatorios.");
 
             return BadRequest(new
             {
@@ -138,7 +130,6 @@ namespace MreHunter.Api.Controllers
 
         if (request.CvFile == null)
         {
-            Console.WriteLine("CvFile llegó null.");
 
             return BadRequest(new
             {
@@ -148,13 +139,9 @@ namespace MreHunter.Api.Controllers
             });
         }
 
-        Console.WriteLine($"Archivo recibido: {request.CvFile.FileName}");
-        Console.WriteLine($"Archivo ContentType: {request.CvFile.ContentType}");
-        Console.WriteLine($"Archivo Length: {request.CvFile.Length}");
 
         if (request.CvFile.Length == 0)
         {
-            Console.WriteLine("El archivo llegó con tamaño 0.");
 
             return BadRequest(new
             {
@@ -179,11 +166,9 @@ namespace MreHunter.Api.Controllers
         };
 
         var fileExtension = Path.GetExtension(request.CvFile.FileName);
-        Console.WriteLine($"Extensión detectada: {fileExtension}");
 
         if (string.IsNullOrWhiteSpace(fileExtension) || !allowedExtensions.Contains(fileExtension))
         {
-            Console.WriteLine("Archivo rechazado por extensión inválida.");
 
             return BadRequest(new
             {
@@ -196,7 +181,6 @@ namespace MreHunter.Api.Controllers
         if (string.IsNullOrWhiteSpace(request.CvFile.ContentType) ||
             !allowedContentTypes.Contains(request.CvFile.ContentType))
         {
-            Console.WriteLine("Archivo rechazado por content-type inválido.");
 
             return BadRequest(new
             {
@@ -208,7 +192,6 @@ namespace MreHunter.Api.Controllers
 
         if (request.CvFile.Length > 5 * 1024 * 1024)
         {
-            Console.WriteLine("Archivo rechazado por tamaño > 5MB.");
 
             return BadRequest(new
             {
@@ -219,12 +202,10 @@ namespace MreHunter.Api.Controllers
         }
 
         var uploadsFolder = Path.Combine(_environment.ContentRootPath, "uploads", "cv");
-        Console.WriteLine($"Carpeta uploads: {uploadsFolder}");
 
         if (!Directory.Exists(uploadsFolder))
         {
             Directory.CreateDirectory(uploadsFolder);
-            Console.WriteLine("Se creó la carpeta uploads/cv.");
         }
 
         var invalidChars = Path.GetInvalidFileNameChars();
@@ -251,21 +232,18 @@ namespace MreHunter.Api.Controllers
             $"{DateTime.UtcNow:yyyyMMddHHmmss}_{safeFirstName}_{safeLastName}_{Guid.NewGuid():N}{fileExtension}";
 
         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-        Console.WriteLine($"Ruta final archivo: {filePath}");
 
         await using (var stream = new FileStream(filePath, FileMode.Create))
         {
             await request.CvFile.CopyToAsync(stream);
         }
 
-        Console.WriteLine("Archivo guardado en disco correctamente.");
 
         var relativePath = Path.Combine("uploads", "cv", uniqueFileName).Replace("\\", "/");
 
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            Console.WriteLine("Falta DefaultConnection.");
 
             return StatusCode(500, new
             {
@@ -277,7 +255,6 @@ namespace MreHunter.Api.Controllers
 
         await using var connection = new MySqlConnection(connectionString);
         await connection.OpenAsync();
-        Console.WriteLine("Conexión a MySQL abierta.");
 
         var query = @"
             INSERT INTO job_applications
@@ -295,7 +272,6 @@ namespace MreHunter.Api.Controllers
         command.Parameters.AddWithValue("@created_at", DateTime.UtcNow);
 
         await command.ExecuteNonQueryAsync();
-        Console.WriteLine("Registro insertado en job_applications correctamente.");
 
         return Ok(new
         {
@@ -306,15 +282,13 @@ namespace MreHunter.Api.Controllers
     }
     catch (Exception ex)
     {
-        Console.WriteLine("ERROR EN APPLY:");
         Console.WriteLine(ex.ToString());
 
         return StatusCode(500, new
         {
             ok = false,
             code = "SERVER_ERROR",
-            mensaje = "Ocurrió un error al procesar la postulación.",
-            error = ex.Message
+            mensaje = "Ocurrió un error al procesar la postulación."
         });
     }
 }

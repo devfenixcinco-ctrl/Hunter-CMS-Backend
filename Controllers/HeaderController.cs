@@ -46,19 +46,24 @@ namespace MreHunter.Api.Controllers
             if (!await reader.ReadAsync())
                 return NotFound(new { message = "No hay header aún" });
 
-            return Ok(new
-            {
-                id = reader.GetInt32("id"),
-                supportLine = ReadNullableString(reader, "support_line"),
-                theftNumber = ReadNullableString(reader, "theft_number"),
-                lunes = ReadNullableString(reader, "lunes"),
-                martes = ReadNullableString(reader, "martes"),
-                miercoles = ReadNullableString(reader, "miercoles"),
-                jueves = ReadNullableString(reader, "jueves"),
-                viernes = ReadNullableString(reader, "viernes"),
-                createdAt = reader.GetDateTime("created_at")
-            });
+            return Ok(Map(reader));
         }
+
+        internal const string SelectLatestSql = "SELECT * FROM header ORDER BY id DESC LIMIT 1;";
+
+        // Compartido con SiteController (/api/site/layout) para que ambas respuestas sean idénticas.
+        internal static object Map(MySqlDataReader reader) => new
+        {
+            id = reader.GetInt32("id"),
+            supportLine = ReadNullableString(reader, "support_line"),
+            theftNumber = ReadNullableString(reader, "theft_number"),
+            lunes = ReadNullableString(reader, "lunes"),
+            martes = ReadNullableString(reader, "martes"),
+            miercoles = ReadNullableString(reader, "miercoles"),
+            jueves = ReadNullableString(reader, "jueves"),
+            viernes = ReadNullableString(reader, "viernes"),
+            createdAt = reader.GetDateTime("created_at")
+        };
 
         [Authorize]
         [HttpPost]
