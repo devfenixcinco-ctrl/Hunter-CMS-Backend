@@ -1,3 +1,4 @@
+using MreHunter.Api.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using MySqlConnector;
 using MreHunter.Api.Models;
@@ -222,34 +223,10 @@ namespace MreHunter.Api.Services
             if (file == null || file.Length == 0)
                 throw new Exception("No se recibió ningún archivo.");
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folder);
 
-            if (!allowedExtensions.Contains(extension))
-                throw new Exception("Formato no permitido. Solo jpg, jpeg, png y webp.");
-
-            var uploadsFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot",
-                "uploads",
-                folder
-            );
-
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            foreach (var ext in allowedExtensions)
-            {
-                var oldFile = Path.Combine(uploadsFolder, fileNameWithoutExtension + ext);
-                if (File.Exists(oldFile))
-                    File.Delete(oldFile);
-            }
-
-            var finalFileName = fileNameWithoutExtension + extension;
-            var filePath = Path.Combine(uploadsFolder, finalFileName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
+            // Se guarda siempre en WebP y con 1920 px de ancho como máximo (ver ImageOptimizer).
+            var finalFileName = await ImageOptimizer.SaveAsWebpAsync(file, uploadsFolder, fileNameWithoutExtension);
 
             return $"{scheme}://{host}/uploads/{folder}/{finalFileName}";
         }
