@@ -84,7 +84,10 @@ try {
     Write-Step "Publicando en Release"
     $publishDir = Join-Path $repoRoot "publish"
     if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
-    Invoke-Native "dotnet" @("publish", "-c", "Release", "-o", $publishDir, "--nologo", "-v", "q") "Falló dotnet publish"
+    # -r linux-x64: el servidor es Ubuntu x64. Sin esto, SkiaSharp (conversión a WebP) incluiría
+    # librerías nativas de todas las plataformas (~480 MB); así solo van las de Linux x64 (~12 MB).
+    # --self-contained false: se sigue usando el runtime de .NET instalado en el servidor.
+    Invoke-Native "dotnet" @("publish", "-c", "Release", "-r", "linux-x64", "--self-contained", "false", "-o", $publishDir, "--nologo", "-v", "q") "Falló dotnet publish"
 
     if (Test-Path (Join-Path $publishDir "wwwroot\uploads")) { throw "El publish incluye wwwroot\uploads: sobrescribiría las imágenes del servidor." }
 

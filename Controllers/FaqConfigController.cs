@@ -51,14 +51,9 @@ namespace MreHunter.Api.Controllers
                 return null;
 
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "faq");
-            Directory.CreateDirectory(uploadsFolder);
 
-            var extension = UploadValidation.EnsureImage(file);
-            var fileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
+            // Se guarda siempre en WebP y con 1920 px de ancho como máximo (ver ImageOptimizer).
+            var fileName = await ImageOptimizer.SaveAsWebpAsync(file, uploadsFolder, Guid.NewGuid().ToString());
 
             return $"/uploads/faq/{fileName}";
         }
