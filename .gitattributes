@@ -1,2 +1,4 @@
 # Los scripts que se ejecutan en Linux deben conservar finales de línea LF.
 *.sh text eol=lf
+# La configuración de nginx también se copia tal cual al servidor Linux.
+*.conf text eol=lf

@@ -58,6 +58,15 @@ link_shared() {
     ln -s "$SHARED/uploads" "$rel/uploads"
 }
 
+# nginx (usuario www-data) sirve /uploads/ directamente desde ~/miapi-shared/wwwroot-uploads.
+# Solo se da permiso de "atravesar" las carpetas (sin listarlas) y de leer las imágenes.
+# Las hojas de vida (~/miapi-shared/uploads) quedan privadas: solo el usuario ubuntu.
+ensure_permissions() {
+    chmod o+x "$HOME" "$SHARED"
+    chmod -R o+rX "$SHARED/wwwroot-uploads"
+    chmod 700 "$SHARED/uploads"
+}
+
 # La Fase 1 exige Jwt__Key >= 32 caracteres: sin ella la API no arranca. Se valida ANTES de tocar nada.
 check_env() {
     sudo test -f "$ENV_FILE" || fail "No existe $ENV_FILE."
@@ -142,6 +151,7 @@ do_deploy() {
     check_env
     migrate_legacy
     mkdir -p "$RELEASES" "$SHARED/wwwroot-uploads" "$SHARED/uploads"
+    ensure_permissions
 
     local rel="$RELEASES/$ts"
     [ -e "$rel" ] && fail "Ya existe la versión $ts."
