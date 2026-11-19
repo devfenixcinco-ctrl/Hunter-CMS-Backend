@@ -1,3 +1,4 @@
+using MreHunter.Api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -20,6 +21,7 @@ namespace MreHunter.Api.Controllers
 
         [AllowAnonymous]
         [EnableRateLimiting("public-forms")]
+        [RequireTurnstile]
         [HttpPost]
         public async Task<IActionResult> Subscribe([FromBody] NewsletterRequest req)
         {
