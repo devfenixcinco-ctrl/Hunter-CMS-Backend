@@ -29,6 +29,7 @@ namespace MreHunter.Api.Controllers
 
         [AllowAnonymous]
         [EnableRateLimiting("public-forms")]
+        [RequireTurnstile]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ContactMessageRequest request)
         {

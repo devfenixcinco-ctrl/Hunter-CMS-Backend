@@ -1,3 +1,4 @@
+using MreHunter.Api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -86,6 +87,7 @@ namespace MreHunter.Api.Controllers
 
         [AllowAnonymous]
         [EnableRateLimiting("public-forms")]
+        [RequireTurnstile]
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Apply([FromForm] JobApplicationRequest request)

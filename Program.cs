@@ -190,6 +190,11 @@ builder.Services
 // ---------- Servicios ----------
 builder.Services.AddSingleton<Db>();
 builder.Services.AddMemoryCache(); // Bloqueo de login por correo + IP (AuthController)
+
+// Cloudflare Turnstile en formularios públicos. Se activa solo cuando hay Turnstile:SecretKey
+// (en el servidor: Turnstile__SecretKey en /etc/miapi.env). Una llamada de máximo 10 s, sin reintentos.
+builder.Services.Configure<TurnstileOptions>(builder.Configuration.GetSection("Turnstile"));
+builder.Services.AddHttpClient<TurnstileValidator>(c => c.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<EmailQueue>();
 builder.Services.AddHostedService<EmailBackgroundService>();
