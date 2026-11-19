@@ -176,7 +176,7 @@ curl.exe -sI https://api.gpsrolandoplazas.com/api/footer
 ```powershell
 curl.exe -sI https://api.gpsrolandoplazas.com/uploads/settings/logo.jpeg
 ```
-→ `HTTP/2 200` y `cache-control: max-age=604800` (usa una imagen que exista; si responde **403**, ver Problemas comunes).
+→ `HTTP/2 200` y `cache-control: max-age=3600` (usa una imagen que exista; si responde **403**, ver Problemas comunes).
 
 En el navegador: DevTools → Red → columna **Protocolo** = `h2`.
 
